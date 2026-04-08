@@ -1,10 +1,4 @@
-nb_drones    :  30
+nb_drones    :  10
 
-    Linha 1              
-Linha           2
-
-
-
-
-
-Fim
+hub: roof 2 3
+hub: roof 2 3
