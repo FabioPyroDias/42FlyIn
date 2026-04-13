@@ -19,6 +19,9 @@ debug:
 	$(PYTHON) -m pdb ######################################TODO
 
 clean:
+	$(RM) src/__pycache__
+	$(RM) src/parser/__pycache__
+	$(RM) src/zones/__pycache__
 
 lint:
 	$(PYTHON) flake8
