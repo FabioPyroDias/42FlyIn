@@ -9,12 +9,13 @@ class Parser():
         self.map_name = map_name
         self.configs: dict[str, Any] = {}
 
-    def add_node(self, node: dict[str, Any]) -> None:
+    def add_node(self, key: str, node: dict[str, Any]) -> None:
         """
         Checks for duplicated nodes.
         If not, add node to list.
 
         Args:
+            key (str): key to add the node
             node (dict[str, Any]): node the be added
 
         Returns:
@@ -24,19 +25,77 @@ class Parser():
             - Raises ValueError if duplicated node
         """
 
+        # Ensures there's only one "start_hub" or "end_hub"
+        if key == "start_hub" or key == "end_hub":
+            node_start = self.configs.get("start_hub", None)
+            node_end = self.configs.get("end_hub", None)
+
+            # Check for duplicates with the same key
+            if key == "start_hub" and node_start:
+                raise ValueError(f"Repeated \"start_hub\". Already exists")
+            if key == "end_hub" and node_end:
+                raise ValueError(f"Repeated \"end_hub\". Already exists")
+
+            # Check if start_hub is equal to the end_hub
+            if key == "start_hub" and node_end:
+                if node["name"] == self.configs["end_hub"]["name"]:
+                    raise ValueError("Node repeated in "
+                                     "\"start_hub\" and \"end_hub\"")
+                if node["coordinates"] == self.configs["end_hub"]["coordinates"]:
+                    raise ValueError(f"Repeated coordinates: "
+                                     f"Node {node['name']} has the same "
+                                     f"coordinates as \"end_hub\"")
+
+            # Check if end_hub is equal to the start_hub
+            if key == "end_hub" and node_start:
+                if node["name"] == self.configs["start_hub"]["name"]:
+                    raise ValueError("Node repeated in "
+                                     "\"start_hub\" and \"end_hub\"")
+                if node["coordinates"] == self.configs["start_hub"]["coordinates"]:
+                    raise ValueError(f"Repeated coordinates: "
+                                     f"Node {node['name']} has the same "
+                                     f"coordinates as \"start_hub\"")
+
+            self.configs[key] = node
+            return
+
         nodes = self.configs.get("nodes", None)
+
+        # Verify duplicates in existing nodes "hub"
+        if nodes:
+            for existing_node in nodes:
+                if existing_node["name"] == node["name"]:
+                    raise ValueError(f"Repeated node: {node['name']}")
+                if existing_node["coordinates"] == node["coordinates"]:
+                    raise ValueError(f"Repeated coordinates: "
+                                        f"Node {node['name']} has the same "
+                                        f"coordinates as {existing_node['name']}")
+
+        # Verify duplicates between "hub" and "start_hub"
+        node_start_hub = self.configs.get("start_hub", None)
+        if node_start_hub:
+            if node_start_hub["name"] == node["name"]:
+                raise ValueError(f"Repeated node: {node['name']} already "
+                                 f"in \"start_hub\"")
+            if node_start_hub["coordinates"] == node["coordinates"]:
+                raise ValueError(f"Repeated coordinates: "
+                                 f"Node {node['name']} has the same "
+                                 f"coordinates as \"start_hub\"")
+
+        # Verify duplicates between "hub" and "end_hub"
+        node_end_hub = self.configs.get("end_hub", None)
+        if node_end_hub:
+            if node_end_hub["name"] == node["name"]:
+                raise ValueError(f"Repeated node: {node['name']} already "
+                                 f"in \"end_hub\"")
+            if node_end_hub["coordinates"] == node["coordinates"]:
+                raise ValueError(f"Repeated coordinates: "
+                                 f"Node {node['name']} has the same "
+                                 f"coordinates as \"end_hub\"")
 
         if not nodes:
             self.configs["nodes"] = [node]
             return
-
-        for existing_node in nodes:
-            if existing_node["name"] == node["name"]:
-                raise ValueError(f"Repeated node: {node['name']}")
-            if existing_node["coordinates"] == node["coordinates"]:
-                raise ValueError(f"Repeated coordinates: "
-                                 f"Node {node['name']} has the same "
-                                 f"coordinates as {existing_node['name']}")
 
         self.configs["nodes"].append(node)
 
@@ -190,11 +249,6 @@ class Parser():
         return node
 
     def validate_connections(self, arguments: str) -> dict[str, Any]:
-
-        #TODO: Verificar se coneccao tem o mesmo node1 e node2
-        # Exemplo:
-        # nodeA-nodeA -> ERRO!
-
         """
         Validates "connections".
         Validates node name and it's metadata
@@ -242,6 +296,11 @@ class Parser():
         if node_names[0] not in nodes or node_names[1] not in nodes:
             raise ValueError(f"Connection invalid. "
                              f"Node not found in {connection_values[0]}")
+
+        # Nodes cannot be connected to themselves
+        if node_names[0] == node_names[1]:
+            raise ValueError("Connection invalid. "
+                             "Connection between the same node is not valid")
 
         connection["node1"] = node_names[0]
         connection["node2"] = node_names[1]
@@ -347,7 +406,7 @@ class Parser():
 
         if key == "start_hub" or key == "end_hub" or key == "hub":
             node = self.validate_hubs(key, elements[1].strip())
-            self.add_node(node)
+            self.add_node(key, node)
         else:
             connection = self.validate_connections(elements[1].strip())
             self.add_connection(connection)
@@ -365,7 +424,7 @@ class Parser():
         Notes:
             - Raises ValueError and FileNotFoundError
         """
-
+            #TODO MODIFICAR O FIRST LINE!
         try:
             with open(self.map_name, 'r') as map:
                 line_index = 0
@@ -382,9 +441,30 @@ class Parser():
                         self.parse_line(clean_line)
 
             # Checks if all required keys exist
+            # - nb_drones
+            # - start_hub
+            # - end_hub
+            # - nodes []
+            # - connections []
             checker_drones = self.configs.get("nb_drones", None)
             if not checker_drones:
                 raise ValueError("Required key not found: nb_drones")
+
+            checker_start_hub = self.configs.get("start_hub", None)
+            if not checker_start_hub:
+                raise ValueError("Required key not found: start_hub")
+
+            checker_end_hub = self.configs.get("end_hub", None)
+            if not checker_end_hub:
+                raise ValueError("Required key not found: end_hub")
+
+            checker_hubs = self.configs.get("nodes", None)
+            if not checker_hubs:
+                raise ValueError("Required key not found: hub")
+
+            checker_connections = self.configs.get("connections", None)
+            if not checker_connections:
+                raise ValueError("Required key not found: connection")
 
             return self.configs
 

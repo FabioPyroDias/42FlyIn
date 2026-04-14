@@ -1,4 +1,7 @@
 nb_drones    :  10
 
-hub: roof 2 3 [color=yellow zone=normal max_drones=3]
+start_hub: node1 5 5
+end_hub: node2 5 10
+
+hub: node3 5 5 [color=yellow zone=normal max_drones=3]
 hub: roof2 3 3 [zone=restricted color=green]
