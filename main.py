@@ -11,4 +11,6 @@ if __name__ == "__main__":
     ]
 
     parser = Parser("test.txt")
-    parser.parse_map()
+    configs = parser.parse_map()
+    graph = Map()
+    graph.create_map()
