@@ -4,18 +4,18 @@ from abc import ABC
 class Zone(ABC):
     def __init__(self, cost: int = 1, is_blocked: bool = False,
                  priority: bool = False) -> None:
-        self.cost = cost
-        self.is_blocked = is_blocked
-        self.priority = priority
+        self._cost = cost
+        self._is_blocked = is_blocked
+        self._priority = priority
 
     def get_cost(self) -> int:
-        return self.cost
+        return self._cost
 
     def get_is_blocked(self) -> bool:
-        return self.is_blocked
+        return self._is_blocked
 
     def get_priority(self) -> bool:
-        return self.priority
+        return self._priority
 
 
 class NormalZone(Zone):

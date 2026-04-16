@@ -10,7 +10,6 @@ if __name__ == "__main__":
         PriorityZone()
     ]
 
-    parser = Parser("test.txt")
+    parser = Parser("maps/hard/02_capacity_hell.txt")
     configs = parser.parse_map()
-    graph = Map()
-    graph.create_map()
+    graph = Map(configs)

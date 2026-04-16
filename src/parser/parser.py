@@ -9,6 +9,7 @@ class Parser():
         self.map_name = map_name
         self.configs: dict[str, Any] = {}
         self.nodes: dict[str, tuple[int, int]] = {}
+        self.line = 0
 
     def add_node(self, key: str, node: dict[str, Any]) -> None:
         """
@@ -85,7 +86,7 @@ class Parser():
         connections = self.configs.get("connections", None)
 
         if not connections:
-            self.configs["connections"] = connection
+            self.configs["connections"] = [connection]
             return
 
         node1 = connection["node1"]
@@ -93,11 +94,11 @@ class Parser():
 
         for existing_connection in connections:
             equality = 0
-            if (existing_connection["node1"] == node1 or
-               existing_connection["node2"] == node1):
+            if (existing_connection == node1 or
+               existing_connection == node1):
                 equality += 1
-            if (existing_connection["node1"] == node2 or
-               existing_connection["node2"] == node2):
+            if (existing_connection == node2 or
+               existing_connection == node2):
                 equality += 1
             if equality == 2:
                 raise ValueError("Connection invalid. "
@@ -377,6 +378,7 @@ class Parser():
         try:
             with open(self.map_name, 'r') as map:
                 for line in map:
+                    self.line += 1
                     clean_line = line.strip()
                     if len(clean_line) == 0 or clean_line[0] == "#":
                         continue
@@ -412,6 +414,6 @@ class Parser():
             return self.configs
 
         except FileNotFoundError:
-            sys.exit(f"ERROR: {self.map_name} not found")
+            sys.exit(f"ERROR Line {self.line}: {self.map_name} not found")
         except ValueError as error:
-            sys.exit(f"ERROR: {error}")
+            sys.exit(f"ERROR Line {self.line}: {error}")
