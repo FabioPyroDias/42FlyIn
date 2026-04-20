@@ -2,7 +2,8 @@ from src.map.zones import NormalZone, BlockedZone, RestrictedZone, PriorityZone
 from typing import Any
 
 class Node():
-    def __init__(self, configs: dict[str, Any]):
+    def __init__(self, configs: dict[str, Any],
+                 start_hub: bool=False, end_hub: bool=False):
         self.name = configs["name"]
         self.coords = configs["coordinates"]
         zone = configs.get("zone", "normal")
@@ -15,6 +16,12 @@ class Node():
         elif zone == "priority":
             self.zone = PriorityZone()
 
-        self.color = color
+        self.color = configs.get("color", "gray")
+        self.max_drones = configs.get("max_drones", -1)
+        self.current_drones = 0
+
+        self.start = start_hub
+        self.end = end_hub
+
+    def set_current_drones(self, current_drones: int) -> None:
         self.current_drones = current_drones
-        self.max_drones = max_drones

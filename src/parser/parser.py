@@ -47,7 +47,7 @@ class Parser():
                                      f"Node {node_name} has the same "
                                      f"coordinates as {node_name}")
 
-            self.configs[key] = [node]
+            self.configs[key] = node
             self.nodes[node["name"]] = node["coordinates"]
             return
 

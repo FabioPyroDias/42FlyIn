@@ -22,6 +22,7 @@ clean:
 	$(RM) src/__pycache__
 	$(RM) src/parser/__pycache__
 	$(RM) src/zones/__pycache__
+	$(RM) src/map/__pycache__
 
 lint:
 	$(PYTHON) flake8
