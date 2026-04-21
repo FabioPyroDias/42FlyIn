@@ -1,12 +1,17 @@
 import sys
 from typing import Any
 from src.map.node import Node
+from src.map.connection import Connection
+
 
 class Map():
     def __init__(self, configs: dict[str, Any]) -> None:
         """
         
         """
+
+        # self.drones holds the number of drones
+        self.drone_count = configs["nb_drones"]
 
         # self.nodes will hold every single node in the graph.
         # This list starts with the "start_hub" node
@@ -26,24 +31,49 @@ class Map():
         self.end_hub = self.nodes[configs["end_hub"]["name"]]
 
         # This dictionary will hold all neighbours for every single node
-        self.connections: dict[str, set[str]] = {}
+        connections: dict[str, set[str]] = {}
+
+        # This dictionary will hold Connection instances
+        # The difference beteen this "self.connections" and "connections"
+        #   is that "connections" alone only holds the neighbours.
+        # "self.connections" holds all the information of that Connection.
+        # Two keys will hold the exact same instance.
+        # Example:
+        # Connection A - B will have two keys: "A-B" and "B-A".
+        # Following this, if a drone intends to move from A to B
+        #   and other drone from B to A, both of these two are the
+        #   same connection. Therefore, any change in one direction
+        #   must be reflected on the other.
+        self.connections: dict[str, Connection] = {}
 
         # Both nodes in the connection will exist as keys.
         # Check the key already exists.
         #   If not, create the key and the value will be the connected node
         #   If it does, add the connected node to the value
         # This way, it's ensured that all nodes will reference all neighbours
+        #
+        # In the case of "self.connections", parser already assured that
+        #   connection only appear one-sided, once.
+        # So, if "A-B" appears, "B-A" doesn't. Therefore, the key will never
+        #   be repeated. But both keys need to exist.
         for connection in configs["connections"]:
-            node1 = self.connections.get(connection["node1"], None)
+            node1_name = connection["node1"]
+            node2_name = connection["node2"]
+
+            node1 = connections.get(node1_name, None)
             if not node1:
-                self.connections[connection["node1"]] = set([connection["node2"]])
+                connections[node1_name] = set([node2_name])
             else:
-                self.connections[connection["node1"]].add(connection["node2"])
-            node2 = self.connections.get(connection["node2"], None)
+                connections[node1_name].add(node2_name)
+            node2 = connections.get(node2_name, None)
             if not node2:
-                self.connections[connection["node2"]] = set([connection["node1"]])
+                connections[node2_name] = set([node1_name])
             else:
-                self.connections[connection["node2"]].add(connection["node1"])
+                connections[node2_name].add(node1_name)
+            
+            connection_info = Connection(connection.get("max_link_capacity", -1))
+            self.connections[f"{node1_name}-{node2_name}"] = connection_info
+            self.connections[f"{node2_name}-{node1_name}"] = connection_info
 
         # === Fabio ALgorithm ===
         # We start with the "start_hub"
@@ -83,17 +113,17 @@ class Map():
         # Since the valid path must include the "start_hub", we can populate
         #   the queue with it's neighbours that are not a valid path.
         # If a valid path is found, we instead add it to "self.paths"
-        for neighbour in self.connections[configs["start_hub"]["name"]]:
+        for neighbour in connections[configs["start_hub"]["name"]]:
             if neighbour == self.end_hub:
-                self.paths.append(tuple([[configs["start_hub"]["name"], neighbour], self.nodes[neighbour].zone.get_cost()]))
+                self.paths.append(tuple([[configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
             else:
-                queue.append(tuple([neighbour, [configs["start_hub"]["name"], neighbour], self.nodes[neighbour].zone.get_cost()]))
+                queue.append(tuple([neighbour, [configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
 
         # While there's still nodes to be explored, departing from "start_hub"
         #   the algorithm continues
         while len(queue) > 0:
             current_path = queue.pop(0)
-            neighbours = self.connections[current_path[0]]
+            neighbours = connections[current_path[0]]
             for neighbour in neighbours:
                 if neighbour in current_path[1]:
                     continue
@@ -103,9 +133,9 @@ class Map():
                 new_path = current_path[1].copy()
                 new_path.append(neighbour)
                 if self.nodes[neighbour] == self.end_hub:
-                    self.paths.append(tuple([new_path, current_path[2] + self.nodes[neighbour].zone.get_cost()]))
+                    self.paths.append(tuple([new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
                 else:
-                    queue.append(tuple([neighbour, new_path, current_path[2] + self.nodes[neighbour].zone.get_cost()]))
+                    queue.append(tuple([neighbour, new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
 
         try:
             # If "self.paths" doesn't have any valid paths,

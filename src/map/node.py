@@ -25,3 +25,6 @@ class Node():
 
     def set_current_drones(self, current_drones: int) -> None:
         self.current_drones = current_drones
+
+    def get_cost(self):
+        return self.zone.get_cost()
