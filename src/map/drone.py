@@ -1,22 +1,24 @@
 from src.map.node import Node
 
 class Drone():
-    def __init__(self, drone_id: int, current_node: Node) -> None:
+    def __init__(self, drone_id: str, current_node: Node) -> None:
         self.drone_id = drone_id
         self.current_node = current_node
         self.target_node = None
         self.is_moving = False
         self.turns_to_move = 0
-        self.reached_end_hub = False
 
     def set_target(self, target_node: Node) -> None:
+        if self.is_moving:
+            return
+
         self.target_node = target_node
         self.turns_to_move = target_node.get_cost()
         self.is_moving = True
 
-    def move(self) -> None:
-        if self.reached_end_hub:
-            return
+    def move(self) -> str:
+        if not self.target_node:
+            return ""
 
         if self.is_moving:
             self.turns_to_move -= 1
@@ -24,9 +26,12 @@ class Drone():
                 self.current_node = self.target_node
                 self.target_node = None
                 self.is_moving = False
-                if self.current_node.end_hub:
-                    self.reached_end_hub = True
-    
+                return f"{self.drone_id}-{self.current_node.name}"
+            else:
+                return (f"{self.drone_id}-{self.current_node.name}"
+                        f"-{self.target_node.name}")
+        return ""
+
     def __str__(self) -> str:
         return (f"Drone {self.drone_id} | "
                f"Current Node: {self.current_node.name} | "

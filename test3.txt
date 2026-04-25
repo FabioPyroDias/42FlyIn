@@ -4,19 +4,6 @@ start_hub: A 0 0 [color=green]
 end_hub: D 10 0 [color=red]
 hub: B 5 0
 hub: C 5 5 [zone=restricted]
-hub: E 2 2
-hub: F 5 8
-hub: G 10 2
-hub: H 14 0
 
-connection: A-B
-connection: C-B
-connection: B-D
 connection: A-C
-connection: E-A
-connection: F-E
-connection: F-G
-connection: H-G
-connection: D-H
-connection: B-E
-connection: C-G
+connection: C-D

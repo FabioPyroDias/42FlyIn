@@ -7,4 +7,6 @@ CONNECTION_METADATA_KEYS = ["max_link_capacity"]
 METADATA_ZONE_VALUES = ["normal", "blocked", "restricted", "priority"]
 
 METADATA_COLOR_VALUES = ["red", "yellow", "blue", "orange", "green", "purple",
-                         "white", "gray", "black", "cyan"]
+                         "white", "gray", "black", "cyan", "brown", "lime",
+                         "magenta", "gold", "maroon", "darkred", "crimson",
+                         "violet", "rainbow"]

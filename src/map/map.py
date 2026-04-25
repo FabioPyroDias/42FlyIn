@@ -113,7 +113,7 @@ class Map():
         # Since the valid path must include the "start_hub", we can populate
         #   the queue with it's neighbours that are not a valid path.
         # If a valid path is found, we instead add it to "self.paths"
-        for neighbour in connections[configs["start_hub"]["name"]]:
+        for neighbour in connections.get(configs["start_hub"]["name"], []):
             if neighbour == self.end_hub:
                 self.paths.append(tuple([[configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
             else:

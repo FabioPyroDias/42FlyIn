@@ -23,8 +23,14 @@ class Node():
         self.start = start_hub
         self.end = end_hub
 
-    def set_current_drones(self, current_drones: int) -> None:
-        self.current_drones = current_drones
+    def add_drone(self) -> None:
+        self.current_drones += 1
+
+    def remove_drone(self) -> None:
+        self.current_drones -= 1
+
+    def get_current_drones(self) -> int:
+        return self.current_drones
 
     def get_cost(self):
         return self.zone.get_cost()
