@@ -33,8 +33,13 @@ class Drone():
         return ""
 
     def __str__(self) -> str:
-        return (f"Drone {self.drone_id} | "
+        text = (f"Drone {self.drone_id} | "
                f"Current Node: {self.current_node.name} | "
-               f"Target Node: {self.target_node} | "
-               f"Turns to move: {self.turns_to_move} | "
-               f"Reached end_hub: {self.reached_end_hub}")
+               f"Target Node: ")
+        if not self.target_node:
+            text += "None | "
+        else:
+            text += f"{self.target_node.name} | "
+        text += f"Turns to move: {self.turns_to_move}"
+
+        return text

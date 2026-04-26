@@ -1,6 +1,7 @@
 from src.map.drone import Drone
 from src.map.map import Map
 import sys
+import time
 
 class Manager():
     def __init__(self, graph: Map):
@@ -10,7 +11,7 @@ class Manager():
 
         drone_index = 0
         while drone_index < self.graph.drone_count:
-            self.active_drones.append(Drone(f"D{drone_index}", self.graph.start_hub))
+            self.active_drones.append(Drone(f"D{drone_index + 1}", self.graph.start_hub))
             self.graph.start_hub.current_drones += 1
             drone_index += 1
 
@@ -18,6 +19,7 @@ class Manager():
     # Impossible Dream becomes infinite loop.
     def run(self) -> None:
         turns = 0
+        print(self.graph.paths)
         while len(self.active_drones) > 0:
             drone_index = 0
             for drone in self.active_drones:
@@ -40,11 +42,11 @@ class Manager():
                         if next_node.current_drones == next_node.max_drones:
                             continue
                     drone.set_target(next_node)
-                    drone.current_node.current_drones -= 1
-                    next_node.current_drones += 1
+                    drone.current_node.remove_drone()
+                    next_node.add_drone()
                     found_path = True
                 drone_index += 1
-                
+
                 drone_message = drone.move()
                 if len(drone_message) != 0:
                     print(drone_message)
@@ -54,6 +56,7 @@ class Manager():
             while drone_index >= 0:
                 drone = self.active_drones[drone_index]
                 if drone.current_node == self.graph.end_hub:
+                    drone.current_node.remove_drone()
                     self.active_drones.pop(drone_index)
                     self.finished_drones.append(drone)
                 drone_index -= 1
@@ -61,5 +64,18 @@ class Manager():
         print(turns)
 
 
-    def run_impossible_dream(self) -> None:
-        pass
+    """ def run_impossible_dream(self) -> None:
+        drone_index = 0
+        drone_paths = []
+        while drone_index < len(self.active_drones):
+            path_index = 0
+            while path_index < len(self.graph.paths):
+                drone_sim = self.active_drones[drone_index].copy()
+                chosen_path_drone = []
+                for path in drone_paths:
+                    if path[0] == path_index:
+                        chosen_path_drone.append(path[1])
+                while drone_sim.current_node != self.graph.end_hub:
+                    pass
+                path_index += 1
+            drone_index += 1 """
