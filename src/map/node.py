@@ -32,5 +32,11 @@ class Node():
     def get_current_drones(self) -> int:
         return self.current_drones
 
-    def get_cost(self):
+    def get_cost(self) -> int:
         return self.zone.get_cost()
+
+    def get_is_blocked(self) -> bool:
+        return self.zone.get_is_blocked()
+
+    def get_priority(self) -> bool:
+        return self.zone.get_priority()

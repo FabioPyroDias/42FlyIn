@@ -71,7 +71,7 @@ class Map():
             else:
                 connections[node2_name].add(node1_name)
             
-            connection_info = Connection(connection.get("max_link_capacity", -1))
+            connection_info = Connection(connection.get("max_link_capacity", 1))
             self.connections[f"{node1_name}-{node2_name}"] = connection_info
             self.connections[f"{node2_name}-{node1_name}"] = connection_info
 

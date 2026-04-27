@@ -1,4 +1,5 @@
 from src.map.node import Node
+from src.map.connection import Connection
 
 class Drone():
     def __init__(self, drone_id: str, current_node: Node) -> None:
@@ -7,12 +8,18 @@ class Drone():
         self.target_node = None
         self.is_moving = False
         self.turns_to_move = 0
+        self.connection = None
 
-    def set_target(self, target_node: Node) -> None:
+    def set_target(self, target_node: Node, connection: Connection) -> None:
         if self.is_moving:
             return
 
         self.target_node = target_node
+        self.target_node.add_drone()
+
+        self.connection = connection
+        self.connection.add_drone()
+
         self.turns_to_move = target_node.get_cost()
         self.is_moving = True
 
@@ -23,8 +30,14 @@ class Drone():
         if self.is_moving:
             self.turns_to_move -= 1
             if self.turns_to_move == 0:
+                self.current_node.remove_drone()
                 self.current_node = self.target_node
+
                 self.target_node = None
+
+                self.connection.remove_drone()
+                self.connection = None
+
                 self.is_moving = False
                 return f"{self.drone_id}-{self.current_node.name}"
             else:

@@ -19,44 +19,72 @@ class Manager():
     # Impossible Dream becomes infinite loop.
     def run(self) -> None:
         turns = 0
-        print(self.graph.paths)
         while len(self.active_drones) > 0:
             drone_index = 0
+            output_message = ""
             for drone in self.active_drones:
                 found_path = False
                 path_index = 0
                 while not found_path and path_index < len(self.graph.paths):
+                    current_node = drone.current_node
                     current_path = self.graph.paths[path_index][0]
-                    current_node_name = drone.current_node.name
+                    current_node_name = current_node.name
                     path_index += 1
                     if current_node_name not in current_path:
                         continue
                     current_node_index = current_path.index(current_node_name)
                     next_node_name = current_path[current_node_index + 1]
                     connection = self.graph.connections[f"{current_node_name}-{next_node_name}"]
-                    if connection.max_link_capacity > 0:
-                        if connection.current_drones == connection.max_link_capacity:
-                            continue
+                    #if drone.drone_id == "D3":
+                        #print(f"DEBUG - Connection: {current_node_name}-{next_node_name}: {connection.current_drones}")
+                    if connection.current_drones == connection.max_link_capacity:
+                        #if drone.drone_id == "D3":
+                            #print(f"DEBUG - Connection: {current_node_name}-{next_node_name}: {connection.current_drones}")
+                        connection = None
+                        continue
                     next_node = self.graph.nodes[next_node_name]
-                    if next_node.max_drones > 0:
-                        if next_node.current_drones == next_node.max_drones:
-                            continue
-                    drone.set_target(next_node)
-                    drone.current_node.remove_drone()
-                    next_node.add_drone()
-                    found_path = True
+                    if next_node.current_drones == next_node.max_drones:
+                        connection = None
+                        next_node = None
+                        continue
+
+                    path_worth = False
+                    if path_index - 1 > 0:
+                        current_path_cost = self.graph.paths[path_index - 1][1]
+                        worth = 0
+                        compare_index = 0
+                        while compare_index < path_index - 1:
+                            if self.graph.paths[compare_index][1] + drone_index < current_path_cost:
+                                worth += 1
+                            compare_index += 1
+                        if worth == path_index - 1:
+                            path_worth = True
+                    else:
+                        path_worth = True
+
+                    if path_worth:
+                        #print(f"DEBUG (Inside path_worth): {drone}")
+                        drone.set_target(next_node, connection)
+                        found_path = True
                 drone_index += 1
+
+                #print(f"DEBUG: {drone}")
+                #print(connection.current_drones)
 
                 drone_message = drone.move()
                 if len(drone_message) != 0:
-                    print(drone_message)
+                    if len(output_message) == 0:
+                        output_message = drone_message
+                    else:
+                        output_message += f" {drone_message}"
 
+                #print(f"DEBUG - {drone.drone_id}: Connection ({current_node_name}-{next_node_name}): {connection.current_drones}")
 
+            print(output_message)
             drone_index = len(self.active_drones) - 1
             while drone_index >= 0:
                 drone = self.active_drones[drone_index]
                 if drone.current_node == self.graph.end_hub:
-                    drone.current_node.remove_drone()
                     self.active_drones.pop(drone_index)
                     self.finished_drones.append(drone)
                 drone_index -= 1
