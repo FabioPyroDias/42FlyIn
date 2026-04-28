@@ -5,13 +5,13 @@ from src.manager import Manager
 if __name__ == "__main__":
 
     #Easy
-    #parser = Parser("maps/easy/01_linear_path.txt")
+    parser = Parser("maps/easy/01_linear_path.txt")
     #parser = Parser("maps/easy/02_simple_fork.txt")
     #parser = Parser("maps/easy/03_basic_capacity.txt")
     #------------------
 
     #Medium
-    parser = Parser("maps/medium/01_dead_end_trap.txt")
+    #parser = Parser("maps/medium/01_dead_end_trap.txt")
     #parser = Parser("maps/medium/02_circular_loop.txt")
     #parser = Parser("maps/medium/03_priority_puzzle.txt")
     #------------------

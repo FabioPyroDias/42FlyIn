@@ -47,6 +47,15 @@ class Parser():
                                      f"Node {node_name} has the same "
                                      f"coordinates as {node_name}")
 
+            # "start_hub" and "end_hub" need to have the metadata field
+            #   "max_drones" if "nb_drones" is bigger than 1
+            if key == "end_hub" and self.configs["nb_drones"] > 1:
+                metadata_number = node.get("max_drones", -1)
+                if metadata_number != self.configs["nb_drones"]:
+                    raise ValueError(f"\"end_hub\" needs metadata "
+                                     f"\"max_drones\" if \"nb_drones\" is "
+                                     f"bigger than 1")
+
             self.configs[key] = node
             self.nodes[node["name"]] = node["coordinates"]
             return
