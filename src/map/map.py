@@ -2,6 +2,7 @@ import sys
 from typing import Any
 from src.map.node import Node
 from src.map.connection import Connection
+from src.map.zones import BlockedZone
 
 
 class Map():
@@ -117,7 +118,8 @@ class Map():
             if neighbour == self.end_hub:
                 self.paths.append(tuple([[configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
             else:
-                queue.append(tuple([neighbour, [configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
+                if not isinstance(self.nodes[neighbour].zone, BlockedZone):
+                    queue.append(tuple([neighbour, [configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
 
         # While there's still nodes to be explored, departing from "start_hub"
         #   the algorithm continues
@@ -135,7 +137,8 @@ class Map():
                 if self.nodes[neighbour] == self.end_hub:
                     self.paths.append(tuple([new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
                 else:
-                    queue.append(tuple([neighbour, new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
+                    if not isinstance(self.nodes[neighbour].zone, BlockedZone):
+                        queue.append(tuple([neighbour, new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
 
         try:
             # If "self.paths" doesn't have any valid paths,
@@ -147,4 +150,4 @@ class Map():
             sys.exit()
 
         # Order the path by cost.
-        self.paths = sorted(self.paths, key=lambda x: x[1])
+        self.paths = sorted(self.paths, key=lambda x: x[1]) #TODO - Desempatar empates via PriorityZone

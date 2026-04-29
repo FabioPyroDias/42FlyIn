@@ -19,6 +19,7 @@ class Manager():
     # Impossible Dream becomes infinite loop.
     def run(self) -> None:
         turns = 0
+        self.graph.paths = self.graph.paths[0:self.graph.drone_count]
         while len(self.active_drones) > 0:
             drone_index = 0
             output_message = ""

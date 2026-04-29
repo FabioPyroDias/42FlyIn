@@ -47,6 +47,20 @@ class Parser():
                                      f"Node {node_name} has the same "
                                      f"coordinates as {node_name}")
 
+            # "start_hub" and "end_hub" need to have the "max_drones" metadata
+            number_drones = node.get("max_drones", -1)
+            if number_drones < 0:
+                node["max_drones"] = self.configs["nb_drones"]
+            elif number_drones < self.configs["nb_drones"]:
+                raise ValueError(f"\"max_drones\" metadata field in "
+                                 f"\"{key}\" is smaller than "
+                                 f"\"nb_drones\"")
+
+            # "start_hub" and "end_hub" cannot be a "blocked" zone
+            zone_type = node.get("zone", None)
+            if zone_type and zone_type == "blocked":
+                raise ValueError(f"\"{key}\" zone cannot be \"blocked\"")
+
             self.configs[key] = node
             self.nodes[node["name"]] = node["coordinates"]
             return
