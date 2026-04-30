@@ -2,7 +2,7 @@ import sys
 from typing import Any
 from src.map.node import Node
 from src.map.connection import Connection
-from src.map.zones import BlockedZone
+from src.map.zones import BlockedZone, PriorityZone
 
 
 class Map():
@@ -149,5 +149,13 @@ class Map():
             print(error)
             sys.exit()
 
-        # Order the path by cost.
-        self.paths = sorted(self.paths, key=lambda x: x[1]) #TODO - Desempatar empates via PriorityZone
+        # Order the path by cost
+        #self.paths = sorted(self.paths, key=lambda x: x[1])
+        self.paths = sorted(self.paths, key=lambda x: (x[1], self.sort_by_priority(x)))
+
+    def sort_by_priority(self, path: tuple[list[str], int]) -> int:
+        counter = 0
+        for node in path[0]:
+            if isinstance(self.nodes[node].zone, PriorityZone):
+                counter -= 1
+        return counter

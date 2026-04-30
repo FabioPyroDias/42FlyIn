@@ -11,7 +11,7 @@ if __name__ == "__main__":
     #------------------
 
     #Medium
-    parser = Parser("maps/medium/01_dead_end_trap.txt")
+    #parser = Parser("maps/medium/01_dead_end_trap.txt")
     #parser = Parser("maps/medium/02_circular_loop.txt")
     #parser = Parser("maps/medium/03_priority_puzzle.txt")
     #------------------
