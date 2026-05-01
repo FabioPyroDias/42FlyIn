@@ -2,6 +2,7 @@ import sys
 from typing import Any
 from src.consts import MAP_KEYS, HUB_METADATA_KEYS
 from src.consts import METADATA_ZONE_VALUES, METADATA_COLOR_VALUES
+from src.map.map_config import MapConfig
 
 
 class Parser():
@@ -375,7 +376,7 @@ class Parser():
             connection = self.validate_connections(elements[1].strip())
             self.add_connection(connection)
 
-    def parse_map(self) -> dict[str, Any]:
+    def parse_map(self) -> MapConfig:
         """
         Opens the map file and parses it, getting all the map information
 
@@ -425,9 +426,9 @@ class Parser():
             if not checker_connections:
                 raise ValueError("Required key not found: connection")
 
-            return self.configs
+            return MapConfig(self.configs)
 
         except FileNotFoundError:
-            sys.exit(f"ERROR Line {self.line}: {self.map_name} not found")
+            sys.exit(f"ERROR: {self.map_name} not found")
         except ValueError as error:
             sys.exit(f"ERROR Line {self.line}: {error}")

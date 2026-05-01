@@ -1,14 +1,16 @@
+from src.map.zones import Zone
 from src.map.zones import NormalZone, BlockedZone, RestrictedZone, PriorityZone
 from typing import Any
 
+
 class Node():
     def __init__(self, configs: dict[str, Any],
-                 start_hub: bool=False, end_hub: bool=False):
+                 start_hub: bool = False, end_hub: bool = False):
         self.name = configs["name"]
         self.coords = configs["coordinates"]
         zone = configs.get("zone", "normal")
         if zone == "normal":
-            self.zone = NormalZone()
+            self.zone: Zone = NormalZone()
         elif zone == "blocked":
             self.zone = BlockedZone()
         elif zone == "restricted":

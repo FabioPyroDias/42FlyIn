@@ -1,5 +1,5 @@
 class Connection():
-    def __init__(self, max_link_capacity) -> None:
+    def __init__(self, max_link_capacity: int) -> None:
         self.max_link_capacity = max_link_capacity
         self.current_drones = 0
 

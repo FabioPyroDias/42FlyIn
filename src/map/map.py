@@ -1,22 +1,26 @@
 import sys
 from typing import Any
+from src.map.map_config import MapConfig
 from src.map.node import Node
 from src.map.connection import Connection
 from src.map.zones import BlockedZone, PriorityZone
 
 
 class Map():
-    def __init__(self, configs: dict[str, Any]) -> None:
+    def __init__(self, map_config: MapConfig) -> None:
         """
-        
         """
+
+        # Take the dictionary out of MapConfigs
+        configs: dict[str, Any] = map_config.configs
 
         # self.drones holds the number of drones
         self.drone_count = configs["nb_drones"]
 
         # self.nodes will hold every single node in the graph.
         # This list starts with the "start_hub" node
-        self.nodes = dict({configs["start_hub"]["name"]: Node(configs["start_hub"], start_hub=True)})
+        self.nodes = dict({configs["start_hub"]["name"]:
+                           Node(configs["start_hub"], start_hub=True)})
 
         # Add all intermidary nodes.
         hubs = configs.get("nodes", None)
@@ -25,7 +29,8 @@ class Map():
                 self.nodes[hub["name"]] = Node(hub)
 
         # Finish the list with the "end_hub" node
-        self.nodes[configs["end_hub"]["name"]] = Node(configs["end_hub"], end_hub=True)
+        self.nodes[configs["end_hub"]["name"]] = Node(configs["end_hub"],
+                                                      end_hub=True)
 
         # Holding references for easier access to "start_hub" and "end_hub"
         self.start_hub = self.nodes[configs["start_hub"]["name"]]
@@ -71,8 +76,9 @@ class Map():
                 connections[node2_name] = set([node1_name])
             else:
                 connections[node2_name].add(node1_name)
-            
-            connection_info = Connection(connection.get("max_link_capacity", 1))
+
+            connection_info = Connection(connection.get("max_link_capacity",
+                                                        1))
             self.connections[f"{node1_name}-{node2_name}"] = connection_info
             self.connections[f"{node2_name}-{node1_name}"] = connection_info
 
@@ -116,10 +122,15 @@ class Map():
         # If a valid path is found, we instead add it to "self.paths"
         for neighbour in connections.get(configs["start_hub"]["name"], []):
             if neighbour == self.end_hub:
-                self.paths.append(tuple([[configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
+                self.paths.append(tuple([[configs["start_hub"]["name"],
+                                          neighbour],
+                                        self.nodes[neighbour].get_cost()]))
             else:
                 if not isinstance(self.nodes[neighbour].zone, BlockedZone):
-                    queue.append(tuple([neighbour, [configs["start_hub"]["name"], neighbour], self.nodes[neighbour].get_cost()]))
+                    queue.append(
+                        tuple([neighbour,
+                               [configs["start_hub"]["name"], neighbour],
+                               self.nodes[neighbour].get_cost()]))
 
         # While there's still nodes to be explored, departing from "start_hub"
         #   the algorithm continues
@@ -135,10 +146,15 @@ class Map():
                 new_path = current_path[1].copy()
                 new_path.append(neighbour)
                 if self.nodes[neighbour] == self.end_hub:
-                    self.paths.append(tuple([new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
+                    self.paths.append(
+                        tuple([new_path, current_path[2] +
+                               self.nodes[neighbour].get_cost()]))
                 else:
                     if not isinstance(self.nodes[neighbour].zone, BlockedZone):
-                        queue.append(tuple([neighbour, new_path, current_path[2] + self.nodes[neighbour].get_cost()]))
+                        queue.append(
+                            tuple([neighbour, new_path,
+                                   current_path[2] +
+                                   self.nodes[neighbour].get_cost()]))
 
         try:
             # If "self.paths" doesn't have any valid paths,
@@ -150,8 +166,10 @@ class Map():
             sys.exit()
 
         # Order the path by cost
-        #self.paths = sorted(self.paths, key=lambda x: x[1])
-        self.paths = sorted(self.paths, key=lambda x: (x[1], self.sort_by_priority(x)))
+        # self.paths = sorted(self.paths, key=lambda x: x[1])
+        self.paths = sorted(self.paths,
+                            key=lambda x: (x[1], self.sort_by_priority(x)))
+        self.paths = self.paths[0:1]
 
     def sort_by_priority(self, path: tuple[list[str], int]) -> int:
         counter = 0

@@ -23,11 +23,19 @@ clean:
 	$(RM) src/parser/__pycache__
 	$(RM) src/zones/__pycache__
 	$(RM) src/map/__pycache__
+	$(RM) .mypy_cache
 
 lint:
-	$(PYTHON) flake8
-	$(PYTHON) mypy $(MYPY_FLAGS)
+	$(PYTHON) -m flake8 main.py
+	$(PYTHON) -m flake8 src
+	$(PYTHON) -m mypy $(MYPY_FLAGS) main.py
+	$(PYTHON) -m mypy $(MYPY_FLAGS) src
 
 lint-strict:
-	$(PYTHON) flake8
-	$(PYTHON) mypy --strict
+	$(PYTHON) -m flake8 main.py
+	$(PYTHON) -m flake8 src
+	$(PYTHON) -m mypy --strict main.py
+	$(PYTHON) -m mypy --strict src
+
+destroy: clean
+	$(RM) flyin

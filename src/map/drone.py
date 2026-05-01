@@ -1,15 +1,17 @@
 from src.map.node import Node
 from src.map.connection import Connection
+from typing import Optional
+
 
 class Drone():
     def __init__(self, drone_id: str, current_node: Node) -> None:
         self.drone_id = drone_id
         self.in_node = True
         self.current_node = current_node
-        self.target_node = None
+        self.target_node: Optional[Node] = None
         self.is_moving = False
         self.turns_to_move = 0
-        self.connection = None
+        self.connection: Optional[Connection] = None
 
     def set_target(self, target_node: Node, connection: Connection) -> None:
         if self.is_moving:
@@ -38,8 +40,9 @@ class Drone():
 
                 self.target_node = None
 
-                self.connection.remove_drone()
-                self.connection = None
+                if self.connection:
+                    self.connection.remove_drone()
+                    self.connection = None
 
                 self.is_moving = False
                 return f"{self.drone_id}-{self.current_node.name}"
@@ -52,8 +55,8 @@ class Drone():
 
     def __str__(self) -> str:
         text = (f"Drone {self.drone_id} | "
-               f"Current Node: {self.current_node.name} | "
-               f"Target Node: ")
+                f"Current Node: {self.current_node.name} | "
+                f"Target Node: ")
         if not self.target_node:
             text += "None | "
         else:
