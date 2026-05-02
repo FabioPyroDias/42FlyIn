@@ -12,6 +12,7 @@ install:
 	$(PIP_INSTALL) --upgrade pip
 	$(PIP_INSTALL) flake8
 	$(PIP_INSTALL) mypy
+	$(PIP_INSTALL) pygame
 
 run:
 
@@ -23,6 +24,7 @@ clean:
 	$(RM) src/parser/__pycache__
 	$(RM) src/zones/__pycache__
 	$(RM) src/map/__pycache__
+	$(RM) src/render/__pycache__
 	$(RM) .mypy_cache
 
 lint:

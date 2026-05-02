@@ -1,11 +1,14 @@
 from src.map.node import Node
 from src.map.connection import Connection
 from typing import Optional
+import math
 
 
 class Drone():
     def __init__(self, drone_id: str, current_node: Node) -> None:
         self.drone_id = drone_id
+        self.coords = current_node.coords
+        self.rotation = (0, 0)
         self.in_node = True
         self.current_node = current_node
         self.target_node: Optional[Node] = None
@@ -27,6 +30,12 @@ class Drone():
         self.in_node = True
         self.is_moving = True
 
+        self.coords = ((self.current_node.coords[0] + self.target_node.coords[0]) / 2,
+                       (self.current_node.coords[1] + self.target_node.coords[1]) / 2)
+
+        self.rotation = -math.degrees(math.atan2(self.target_node.coords[1] - self.current_node.coords[1],
+                                                 self.target_node.coords[0] - self.current_node.coords[0]))
+
     def move(self) -> str:
         if not self.target_node:
             return ""
@@ -45,10 +54,14 @@ class Drone():
                     self.connection = None
 
                 self.is_moving = False
+
+                self.coords = self.current_node.coords
+
                 return f"{self.drone_id}-{self.current_node.name}"
             else:
                 self.in_node = False
                 self.current_node.remove_drone()
+
                 return (f"{self.drone_id}-{self.current_node.name}"
                         f"-{self.target_node.name}")
         return ""

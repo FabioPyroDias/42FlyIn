@@ -9,6 +9,7 @@ class Manager():
         self.graph = graph
         self.active_drones = []
         self.finished_drones: list[Drone] = []
+        self.turns = []
 
         drone_index = 0
         while drone_index < self.graph.drone_count:
@@ -24,6 +25,7 @@ class Manager():
         self.graph.paths = self.graph.paths[0:self.graph.drone_count]
         while len(self.active_drones) > 0:
             drone_index = 0
+            turn_history = []
             output_message = ""
             for drone in self.active_drones:
                 found_path = False
@@ -77,7 +79,9 @@ class Manager():
                         output_message = drone_message
                     else:
                         output_message += f" {drone_message}"
+                    turn_history.append([drone.drone_id, drone.coords, drone.rotation])
 
+            self.turns.append(turn_history)
             print(output_message)
             drone_index = len(self.active_drones) - 1
             while drone_index >= 0:
@@ -85,6 +89,7 @@ class Manager():
                 if drone.current_node == self.graph.end_hub:
                     self.active_drones.pop(drone_index)
                     self.finished_drones.append(drone)
+                    drone.coords = 0
                 drone_index -= 1
             turns += 1
         print(turns)

@@ -2,6 +2,7 @@ import sys
 from src.parser.parser import Parser
 from src.map.map import Map
 from src.manager import Manager
+from src.render.renderer import Renderer
 
 if __name__ == "__main__":
     try:
@@ -16,3 +17,5 @@ if __name__ == "__main__":
     graph = Map(configs)
     manager = Manager(graph)
     manager.run()
+    print(manager.turns)
+    #renderer = Renderer(manager)
