@@ -17,5 +17,5 @@ if __name__ == "__main__":
     graph = Map(configs)
     manager = Manager(graph)
     manager.run()
-    print(manager.turns)
-    #renderer = Renderer(manager)
+    renderer = Renderer(manager)
+    renderer.run()
