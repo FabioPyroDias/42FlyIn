@@ -62,13 +62,80 @@ class VisualConnection():
 
     def draw(self):
         pygame.draw.line(self.surface, self.color,
-                         self.coords_1, self.coords_2)
-
+                         self.coords_1, self.coords_2, 6)
 
 
 class VisualDrone():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, id: int, coords: tuple[float, float],
+                 scale: float, surface: pygame.Surface) -> None:
+        self.id = str(id)
+        self.coords = coords
+        self.scale = scale
+        self.surface = surface
+
+    def draw(self):
+        width = self.scale / 3
+        height = self.scale / 4
+
+        pygame.draw.rect(self.surface, COLORS["white"],
+                         (self.coords[0] - width / 2,
+                          self.coords[1] - height / 2,
+                          width, height))
+
+        standard_font_size = 26
+        font_size = standard_font_size
+
+        if self.scale / 2 < standard_font_size:
+            font_size = int(self.scale / 2)
+
+        font = pygame.font.SysFont(None, font_size)
+        text_surf = font.render(self.id, True, (0, 0, 0))
+        self.surface.blit(text_surf, text_surf.get_rect(center = (self.coords)))
+
+
+        pygame.draw.line(self.surface, COLORS["white"],
+                         (self.coords[0] - width / 2,
+                          self.coords[1] - height / 2),
+                          ((self.coords[0] - width / 2) - self.scale / 8,
+                           (self.coords[1] - height / 2) - self.scale / 10),
+                           5)
+        pygame.draw.circle(self.surface, COLORS["white"],
+                           ((self.coords[0] - width / 2) - self.scale / 8,
+                           (self.coords[1] - height / 2) - self.scale / 10),
+                           self.scale / 10)
+
+        pygame.draw.line(self.surface, COLORS["white"],
+                         (self.coords[0] + width / 2,
+                          self.coords[1] - height / 2),
+                          ((self.coords[0] + width / 2) + self.scale / 8,
+                           (self.coords[1] - height / 2) - self.scale / 10),
+                           5)
+        pygame.draw.circle(self.surface, COLORS["white"],
+                           ((self.coords[0] + width / 2) + self.scale / 8,
+                           (self.coords[1] - height / 2) - self.scale / 10),
+                           self.scale / 10)
+
+        pygame.draw.line(self.surface, COLORS["white"],
+                         (self.coords[0] - width / 2,
+                          self.coords[1] + height / 2),
+                          ((self.coords[0] - width / 2) - self.scale / 8,
+                           (self.coords[1] + height / 2) + self.scale / 10),
+                           5)
+        pygame.draw.circle(self.surface, COLORS["white"],
+                           ((self.coords[0] - width / 2) - self.scale / 8,
+                           (self.coords[1] + height / 2) + self.scale / 10),
+                           self.scale / 10)
+
+        pygame.draw.line(self.surface, COLORS["white"],
+                         (self.coords[0] + width / 2,
+                          self.coords[1] + height / 2),
+                          ((self.coords[0] + width / 2) + self.scale / 8,
+                           (self.coords[1] + height / 2) + self.scale / 10),
+                           5)
+        pygame.draw.circle(self.surface, COLORS["white"],
+                           ((self.coords[0] + width / 2) + self.scale / 8,
+                           (self.coords[1] + height / 2) + self.scale / 10),
+                           self.scale / 10)
 
 
 class Renderer():
@@ -77,14 +144,11 @@ class Renderer():
         pygame.init()
 
         self.set_window_size()
-
         self.surface = pygame.display.set_mode((self.width, self.height))
-
-
-
 
         self.create_visual_nodes()
         self.create_visual_connections()
+        self.create_visual_drones()
 
         self.clock = pygame.time.Clock()
 
@@ -100,6 +164,9 @@ class Renderer():
         #   4.1. Atribuir coordenadas aos Drones.
         # 5. Percorrer lista de turnos e cada evento
         #   5.1. Recriar eventos com animacao (X frames / Y segundos para cada turno simulado)
+        # 6.
+        #   Se o drone estiver a meio da Connection, turno tem o formato: [drone.drone_id, drone.current_node.name, drone.target_node.name]
+        #   Se estiver chegado ao outro Node, tem o formato: [drone.drone_id, drone.current_node.name]
 
     def set_window_size(self) -> None:
         self.scale = 100
@@ -208,6 +275,14 @@ class Renderer():
             self.visual_connections.append(
                 VisualConnection(node_1, node_2, self.surface))
 
+    def create_visual_drones(self) -> None:
+        self.visual_drones = {}
+
+        for index in range(self.manager.graph.drone_count):
+            coords = self.visual_nodes[self.manager.graph.start_hub.name].get_coords()
+            self.visual_drones[f"D{index + 1}"] = VisualDrone(index + 1, coords, self.scale, self.surface)
+
+
 
     def draw_nodes(self) -> None:
         for node in self.visual_nodes.values():
@@ -217,12 +292,17 @@ class Renderer():
         for connection in self.visual_connections:
             connection.draw()
 
+    def draw_drones(self) -> None:
+        for drone in self.visual_drones.values():
+            drone.draw()
+
     def run(self) -> None:
         for turn in self.manager.turns:
             for event in turn:
                 #self.screen.fill()
                 self.draw_connections()
                 self.draw_nodes()
+                self.draw_drones()
                 pygame.display.flip()
                 time.sleep(2)
         #pygame.quit()

@@ -79,7 +79,9 @@ class Manager():
                         output_message = drone_message
                     else:
                         output_message += f" {drone_message}"
-                    turn_history.append([drone.drone_id, drone.coords, drone.rotation])
+                    if drone.is_moving:
+                        turn_history.append([drone.drone_id, drone.current_node.name, drone.target_node.name])
+                    turn_history.append([drone.drone_id, drone.current_node.name])
 
             self.turns.append(turn_history)
             print(output_message)
