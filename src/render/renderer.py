@@ -28,30 +28,45 @@ COLORS = {
     "darkred": pygame.Color(149, 6, 6),
     "crimson": pygame.Color(178, 34, 34),
     "violet": pygame.Color(127, 0, 255),
-    "rainbow": pygame.Color(0, 0, 0)
+    "rainbow": pygame.Color(255, 255, 255)
 }
 
-class NodeVisual():
-    def __init__(self, coords: tuple[Any, Any], color: str) -> None:
+class VisualNode():
+    def __init__(self, coords: tuple[Any, Any],
+                 color: str, scale: float, surface: pygame.Surface) -> None:
         self.coords = coords
-        if color != "rainbow":
-            self.color = COLORS[color]
+        if color == "rainbow":
+            self.color = COLORS["rainbow"]
         else:
-            pass
+            self.color = COLORS[color]
+        self.scale = scale
+        self.surface = surface
+
+    def get_coords(self) -> tuple[float, float]:
+        return self.coords
 
     def draw(self) -> None:
-        pygame.draw.circle(self.screen, COLORS[self.color], 
-                           (self.width / 2 * self.coords[0] / self.middle_point[0] + self.width / 4,
-                           self.height / 2 * self.coords[1]),
-                           self.scale / 3)
+        pygame.draw.circle(self.surface, self.color, 
+                           self.coords, self.scale / 4)
 
 
-class ConnectionVisual():
-    def __init__(self) -> None:
-        pass
+class VisualConnection():
+    def __init__(self, node_1: VisualNode, node_2: VisualNode,
+                 surface: pygame.Surface) -> None:
+        self.coords_1 = node_1.get_coords()
+        self.coords_2 = node_2.get_coords()
+        self.surface = surface
+        self.color = pygame.Color(51, 51, 255)
+        #import random
+        #self.color = pygame.Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+    def draw(self):
+        pygame.draw.line(self.surface, self.color,
+                         self.coords_1, self.coords_2)
 
 
-class DroneVisual():
+
+class VisualDrone():
     def __init__(self) -> None:
         pass
 
@@ -62,9 +77,15 @@ class Renderer():
         pygame.init()
 
         self.set_window_size()
-        self.create_visual_nodes()
 
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.surface = pygame.display.set_mode((self.width, self.height))
+
+
+
+
+        self.create_visual_nodes()
+        self.create_visual_connections()
+
         self.clock = pygame.time.Clock()
 
         # Passos deste init:
@@ -85,14 +106,14 @@ class Renderer():
 
         min_width = 800
         max_width = 1600
-        min_height = 700
-        max_height = 900
+        min_height = 800
+        max_height = 1000
 
         self.width = min_width
         self.height = min_height
 
         self.draw_width_margin = 200
-        self.draw_height_margin = 100
+        self.draw_height_margin = 200
         self.draw_width = self.width - self.draw_width_margin
         self.draw_height = self.height - self.draw_height_margin
 
@@ -146,7 +167,7 @@ class Renderer():
         self.middle_point_y = (self.coords_y[1] - self.coords_y[0]) / 2
 
     def create_visual_nodes(self) -> None:
-        self.visual_nodes = []
+        self.visual_nodes = {}
 
         map_range_x = self.coords_x[1] - self.coords_x[0]
         map_range_y = self.coords_y[1] - self.coords_y[0]
@@ -166,14 +187,42 @@ class Renderer():
             else:
                 y = (((node.coords[1] - self.coords_y[0]) * self.draw_height) /
                      map_range_y) + self.draw_height_margin / 2
+                y = (self.height / 2) + ((self.height / 2) - y)
 
-            self.visual_nodes.append((x, y), node.color)
+            if node.name == "maze_dead_a":
+                print(f"x {x} | y {y}")
+            if node.name == "maze_trap_a3":
+                print(f"x {x} | y {y}")
+
+            self.visual_nodes[node.name] = (
+                VisualNode((x, y), node.color, self.scale, self.surface))
+
+    def create_visual_connections(self) -> None:
+        self.visual_connections = []
+
+        for connection in self.manager.graph.connections.values():
+            node_1 = self.visual_nodes[connection.node_1]
+            node_2 = self.visual_nodes[connection.node_2]
+            if (connection.node_1 == "maze_dead_a" and connection.node_2 == "maze_trap_a3") or (connection.node_1 == "maze_trap_a3" and connection.node_2 == "maze_dead_a"):
+                print(f"A -> {node_1.get_coords()} | B -> {node_2.get_coords()}")
+            self.visual_connections.append(
+                VisualConnection(node_1, node_2, self.surface))
+
+
+    def draw_nodes(self) -> None:
+        for node in self.visual_nodes.values():
+            node.draw()
+
+    def draw_connections(self) -> None:
+        for connection in self.visual_connections:
+            connection.draw()
 
     def run(self) -> None:
         for turn in self.manager.turns:
             for event in turn:
                 #self.screen.fill()
-                #self.draw_nodes()
+                self.draw_connections()
+                self.draw_nodes()
                 pygame.display.flip()
                 time.sleep(2)
         #pygame.quit()

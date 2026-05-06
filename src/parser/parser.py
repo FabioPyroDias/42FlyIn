@@ -430,5 +430,7 @@ class Parser():
 
         except FileNotFoundError:
             sys.exit(f"ERROR: {self.map_name} not found")
+        except IsADirectoryError:
+            sys.exit(f"ERROR: {self.map_name} is a directory, not a file")
         except ValueError as error:
             sys.exit(f"ERROR Line {self.line}: {error}")
