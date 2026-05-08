@@ -12,10 +12,13 @@ if __name__ == "__main__":
     except ValueError as error:
         sys.exit(f"ERROR: {error}")
 
-    parser = Parser(sys.argv[1])
-    configs = parser.parse_map()
-    graph = Map(configs)
-    manager = Manager(graph)
-    manager.run()
-    renderer = Renderer(manager)
-    renderer.run()
+    try:
+        parser = Parser(sys.argv[1])
+        configs = parser.parse_map()
+        graph = Map(configs)
+        manager = Manager(graph)
+        manager.run()
+        renderer = Renderer(manager)
+        renderer.run()
+    except (KeyboardInterrupt, EOFError):
+        sys.exit("\nKeyboardInterrupt - Exiting program...")

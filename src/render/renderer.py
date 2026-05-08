@@ -1,8 +1,11 @@
+import sys
 import pygame
 import time
 from typing import Any
 from src.manager import Manager
 from src.map.node import Node
+from src.map.zones import Zone, NormalZone, PriorityZone
+from src.map.zones import BlockedZone, RestrictedZone
 
 METADATA_COLOR_VALUES = ["red", "yellow", "blue", "orange", "green", "purple",
                          "white", "gray", "black", "cyan", "brown", "lime",
@@ -33,21 +36,70 @@ COLORS = {
 
 class VisualNode():
     def __init__(self, coords: tuple[Any, Any],
-                 color: str, scale: float, surface: pygame.Surface) -> None:
+                 color: str, scale: float, surface: pygame.Surface,
+                 zone: Zone) -> None:
         self.coords = coords
-        if color == "rainbow":
-            self.color = COLORS["rainbow"]
-        else:
-            self.color = COLORS[color]
+        self.color_name = color
+        self.color = COLORS[self.color_name]
         self.scale = scale
+        factor = 4
         self.surface = surface
+
+        if self.color_name != "rainbow":
+            self.border_surface = pygame.image.load("assets/Border.png").convert_alpha()
+            self.base_surface = pygame.image.load("assets/Base.png").convert_alpha()
+            self.highlight_surface = pygame.image.load("assets/Highlight.png").convert_alpha()
+            self.shadow_surface = pygame.image.load("assets/Shadow.png").convert_alpha()
+
+            image_width = self.border_surface.get_width() * ((self.scale / 100) / factor)
+            image_height = self.border_surface.get_height() * ((self.scale / 100) / factor)
+
+            self.border_surface = pygame.transform.scale(self.border_surface, (int(image_width), int(image_height)))
+            self.base_surface = pygame.transform.scale(self.base_surface, (int(image_width), int(image_height)))
+            self.base_surface.fill(self.color, special_flags=pygame.BLEND_ADD)
+            self.highlight_surface = pygame.transform.scale(self.highlight_surface, (int(image_width), int(image_height)))
+            self.highlight_surface.fill(self.color, special_flags=pygame.BLEND_ADD)
+            self.shadow_surface = pygame.transform.scale(self.shadow_surface, (int(image_width), int(image_height)))
+        else:
+            self.rainbow_surface = pygame.image.load("assets/RainbowNode.png").convert_alpha()
+
+            image_width = self.rainbow_surface.get_width() * ((self.scale / 100) / factor)
+            image_height = self.rainbow_surface.get_height() * ((self.scale / 100) / factor)
+
+            self.rainbow_surface = pygame.transform.scale(self.rainbow_surface, (int(image_width), int(image_height)))
+
+
+        self.zone_surface = None
+
+        if not isinstance(zone, NormalZone):
+            self.zone_surface = pygame.image.load("assets/Zone.png").convert_alpha()
+            zone_width = self.zone_surface.get_width() * ((self.scale / 100) / factor)
+            zone_height = self.zone_surface.get_height() * ((self.scale / 100) / factor)
+            self.zone_surface = pygame.transform.scale(self.zone_surface, (int(zone_width), int(zone_height)))
+
+        if isinstance(zone, PriorityZone):
+            self.zone_surface.fill(COLORS["green"], special_flags=pygame.BLEND_MULT)
+        elif isinstance(zone, RestrictedZone):
+            self.zone_surface.fill(COLORS["yellow"], special_flags=pygame.BLEND_MULT)
+        elif isinstance(zone, BlockedZone):
+            self.zone_surface.fill(COLORS["red"], special_flags=pygame.BLEND_MULT)
 
     def get_coords(self) -> tuple[float, float]:
         return self.coords
 
     def draw(self) -> None:
-        pygame.draw.circle(self.surface, self.color, 
-                           self.coords, self.scale / 4)
+        """ pygame.draw.circle(self.surface, self.color, 
+                           self.coords, self.scale / 4) """
+        if self.color_name != "rainbow":
+            self.surface.blit(self.border_surface, self.border_surface.get_rect(center = self.coords))
+            self.surface.blit(self.base_surface, self.base_surface.get_rect(center = self.coords))
+            self.surface.blit(self.highlight_surface, self.highlight_surface.get_rect(center = self.coords))
+            self.surface.blit(self.shadow_surface, self.shadow_surface.get_rect(center = self.coords))
+        else:
+            self.surface.blit(self.rainbow_surface, self.rainbow_surface.get_rect(center = self.coords))
+
+        if self.zone_surface:
+            self.surface.blit(self.zone_surface, self.zone_surface.get_rect(center = self.coords))
 
 
 class VisualConnection():
@@ -56,7 +108,7 @@ class VisualConnection():
         self.coords_1 = node_1.get_coords()
         self.coords_2 = node_2.get_coords()
         self.surface = surface
-        self.color = pygame.Color(51, 51, 255)
+        self.color = pygame.Color(21, 234, 229)
         #import random
         #self.color = pygame.Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
@@ -71,71 +123,27 @@ class VisualDrone():
         self.id = str(id)
         self.coords = coords
         self.scale = scale
+        factor = 3
         self.surface = surface
+        self.drone_surface = pygame.image.load("assets/Drone.png").convert_alpha()
 
-    def draw(self):
-        width = self.scale / 3
-        height = self.scale / 4
+        image_width = self.drone_surface.get_width() * ((self.scale / 100) / factor)
+        image_height = self.drone_surface.get_height() * ((self.scale / 100) / factor)
+        
+        self.drone_surface = pygame.transform.scale(self.drone_surface, (int(image_width), int(image_height)))
 
-        pygame.draw.rect(self.surface, COLORS["white"],
-                         (self.coords[0] - width / 2,
-                          self.coords[1] - height / 2,
-                          width, height))
-
-        standard_font_size = 26
-        font_size = standard_font_size
+        standard_font_size = 28
+        self.font_size = standard_font_size
 
         if self.scale / 2 < standard_font_size:
-            font_size = int(self.scale / 2)
+            self.font_size = int(self.scale / 2)
 
-        font = pygame.font.SysFont(None, font_size)
+    def draw(self):
+        self.surface.blit(self.drone_surface, self.drone_surface.get_rect(center = self.coords))
+
+        font = pygame.font.SysFont(None, self.font_size)
         text_surf = font.render(self.id, True, (0, 0, 0))
         self.surface.blit(text_surf, text_surf.get_rect(center = (self.coords)))
-
-
-        pygame.draw.line(self.surface, COLORS["white"],
-                         (self.coords[0] - width / 2,
-                          self.coords[1] - height / 2),
-                          ((self.coords[0] - width / 2) - self.scale / 8,
-                           (self.coords[1] - height / 2) - self.scale / 10),
-                           5)
-        pygame.draw.circle(self.surface, COLORS["white"],
-                           ((self.coords[0] - width / 2) - self.scale / 8,
-                           (self.coords[1] - height / 2) - self.scale / 10),
-                           self.scale / 10)
-
-        pygame.draw.line(self.surface, COLORS["white"],
-                         (self.coords[0] + width / 2,
-                          self.coords[1] - height / 2),
-                          ((self.coords[0] + width / 2) + self.scale / 8,
-                           (self.coords[1] - height / 2) - self.scale / 10),
-                           5)
-        pygame.draw.circle(self.surface, COLORS["white"],
-                           ((self.coords[0] + width / 2) + self.scale / 8,
-                           (self.coords[1] - height / 2) - self.scale / 10),
-                           self.scale / 10)
-
-        pygame.draw.line(self.surface, COLORS["white"],
-                         (self.coords[0] - width / 2,
-                          self.coords[1] + height / 2),
-                          ((self.coords[0] - width / 2) - self.scale / 8,
-                           (self.coords[1] + height / 2) + self.scale / 10),
-                           5)
-        pygame.draw.circle(self.surface, COLORS["white"],
-                           ((self.coords[0] - width / 2) - self.scale / 8,
-                           (self.coords[1] + height / 2) + self.scale / 10),
-                           self.scale / 10)
-
-        pygame.draw.line(self.surface, COLORS["white"],
-                         (self.coords[0] + width / 2,
-                          self.coords[1] + height / 2),
-                          ((self.coords[0] + width / 2) + self.scale / 8,
-                           (self.coords[1] + height / 2) + self.scale / 10),
-                           5)
-        pygame.draw.circle(self.surface, COLORS["white"],
-                           ((self.coords[0] + width / 2) + self.scale / 8,
-                           (self.coords[1] + height / 2) + self.scale / 10),
-                           self.scale / 10)
 
 
 class Renderer():
@@ -145,28 +153,14 @@ class Renderer():
 
         self.set_window_size()
         self.surface = pygame.display.set_mode((self.width, self.height))
+        self.background = pygame.image.load("assets/Background.png")
+        self.background = pygame.transform.scale(self.background, (self.width, self.height))
 
         self.create_visual_nodes()
         self.create_visual_connections()
         self.create_visual_drones()
 
         self.clock = pygame.time.Clock()
-
-        # Passos deste init:
-        # 1. Preparar janela para a impressao do mapa.                  DONE
-        # 2. Criar representacoes visuais dos Nodes (NodeVisual)
-        #   2.1. Definir cor
-        #   2.2. Definir coordenadas adaptadas a janela.
-        # 3. Criar representacoes visuais das Connections
-        #   3.1. Especificar cor
-        #   3.2. Definir inicio e fim.
-        # 4. Criar representacoes visuais dos Drones (DroneVisual)
-        #   4.1. Atribuir coordenadas aos Drones.
-        # 5. Percorrer lista de turnos e cada evento
-        #   5.1. Recriar eventos com animacao (X frames / Y segundos para cada turno simulado)
-        # 6.
-        #   Se o drone estiver a meio da Connection, turno tem o formato: [drone.drone_id, drone.current_node.name, drone.target_node.name]
-        #   Se estiver chegado ao outro Node, tem o formato: [drone.drone_id, drone.current_node.name]
 
     def set_window_size(self) -> None:
         self.scale = 100
@@ -256,13 +250,9 @@ class Renderer():
                      map_range_y) + self.draw_height_margin / 2
                 y = (self.height / 2) + ((self.height / 2) - y)
 
-            if node.name == "maze_dead_a":
-                print(f"x {x} | y {y}")
-            if node.name == "maze_trap_a3":
-                print(f"x {x} | y {y}")
-
             self.visual_nodes[node.name] = (
-                VisualNode((x, y), node.color, self.scale, self.surface))
+                VisualNode((x, y), node.color, self.scale, self.surface,
+                           node.zone))
 
     def create_visual_connections(self) -> None:
         self.visual_connections = []
@@ -270,8 +260,6 @@ class Renderer():
         for connection in self.manager.graph.connections.values():
             node_1 = self.visual_nodes[connection.node_1]
             node_2 = self.visual_nodes[connection.node_2]
-            if (connection.node_1 == "maze_dead_a" and connection.node_2 == "maze_trap_a3") or (connection.node_1 == "maze_trap_a3" and connection.node_2 == "maze_dead_a"):
-                print(f"A -> {node_1.get_coords()} | B -> {node_2.get_coords()}")
             self.visual_connections.append(
                 VisualConnection(node_1, node_2, self.surface))
 
@@ -281,8 +269,6 @@ class Renderer():
         for index in range(self.manager.graph.drone_count):
             coords = self.visual_nodes[self.manager.graph.start_hub.name].get_coords()
             self.visual_drones[f"D{index + 1}"] = VisualDrone(index + 1, coords, self.scale, self.surface)
-
-
 
     def draw_nodes(self) -> None:
         for node in self.visual_nodes.values():
@@ -299,10 +285,15 @@ class Renderer():
     def run(self) -> None:
         for turn in self.manager.turns:
             for event in turn:
-                #self.screen.fill()
+                self.surface.blit(self.background, (0, 0))
                 self.draw_connections()
                 self.draw_nodes()
                 self.draw_drones()
                 pygame.display.flip()
                 time.sleep(2)
+
+                for pygame_event in pygame.event.get():
+                    if pygame_event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
         #pygame.quit()
