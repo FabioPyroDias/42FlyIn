@@ -121,6 +121,7 @@ class VisualDrone():
     def __init__(self, id: int, coords: tuple[float, float],
                  scale: float, surface: pygame.Surface) -> None:
         self.id = str(id)
+        self.can_move = False
         self.coords = coords
         self.scale = scale
         factor = 3
@@ -138,12 +139,29 @@ class VisualDrone():
         if self.scale / 2 < standard_font_size:
             self.font_size = int(self.scale / 2)
 
+    def get_coords(self) -> tuple[Any]:
+        return self.coords
+
+    def set_turn_target(self, target_coords: tuple[float, float], duration: float):
+        self.can_move = True
+        self.x = target_coords[0] / duration
+        self.y = target_coords[1] / duration
+
+    def move(self, delta: int):
+        if not self.can_move:
+            return
+
+        self.coords = (self.coords[0] + (self.x * delta), self.coords[1] + (self.y * delta))
+
     def draw(self):
         self.surface.blit(self.drone_surface, self.drone_surface.get_rect(center = self.coords))
 
         font = pygame.font.SysFont(None, self.font_size)
         text_surf = font.render(self.id, True, (0, 0, 0))
         self.surface.blit(text_surf, text_surf.get_rect(center = (self.coords)))
+
+    def reset_can_move(self) -> None:
+        self.can_move = False
 
 
 class Renderer():
@@ -160,7 +178,11 @@ class Renderer():
         self.create_visual_connections()
         self.create_visual_drones()
 
-        self.clock = pygame.time.Clock()
+        self.turn_duration = 1000
+        self.turn_cooldown = 100
+        self.after_time = 2000
+
+        self.fps = 60
 
     def set_window_size(self) -> None:
         self.scale = 100
@@ -282,18 +304,69 @@ class Renderer():
         for drone in self.visual_drones.values():
             drone.draw()
 
+    def set_turn_event(self, events: list[Any]):
+        for event in events:
+            target_coords = ()
+            drone_coords = self.visual_drones[event[0]].get_coords()
+            node_coords = self.visual_nodes[event[1]].get_coords()
+            if len(event) == 2:
+                target_coords = (
+                    node_coords[0] - drone_coords[0],
+                    node_coords[1] - drone_coords[1],
+                )
+            else:
+                node_2_coords = self.visual_nodes[event[2]].get_coords()
+                middle_point = (
+                    node_coords[0] - node_2_coords[0],
+                    node_coords[1] - node_2_coords[1],
+                )
+                target_coords = (
+                    middle_point[0] - drone_coords[0],
+                    middle_point[1] - drone_coords[1],
+                )
+            self.visual_drones[event[0]].set_turn_target(target_coords, self.turn_duration)
+
     def run(self) -> None:
+        clock = pygame.time.Clock()
+
         for turn in self.manager.turns:
-            for event in turn:
+            self.set_turn_event(turn)
+
+            current_time = 0
+
+            while current_time < self.turn_duration:
                 self.surface.blit(self.background, (0, 0))
                 self.draw_connections()
                 self.draw_nodes()
                 self.draw_drones()
                 pygame.display.flip()
-                time.sleep(2)
+                self.check_pygame_event()
 
-                for pygame_event in pygame.event.get():
-                    if pygame_event.type == pygame.QUIT:
-                        pygame.quit()
-                        sys.exit()
-        #pygame.quit()
+                delta = clock.tick(self.fps)
+
+                for drone in self.visual_drones.values():
+                    drone.move(delta)
+                current_time += delta
+
+            current_time = 0
+
+            while current_time < self.turn_cooldown:
+                self.check_pygame_event()
+                current_time += delta
+            
+            for drone in self.visual_drones.values():
+                drone.reset_can_move()
+
+        current_time = 0
+        while current_time < self.after_time:
+            delta = clock.tick(self.fps)
+            current_time += delta
+            self.check_pygame_event()
+
+        pygame.quit()
+
+    def check_pygame_event(self):
+        for pygame_event in pygame.event.get():
+                if pygame_event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
