@@ -150,7 +150,6 @@ class VisualDrone():
     def move(self, delta: int):
         if not self.can_move:
             return
-
         self.coords = (self.coords[0] + (self.x * delta), self.coords[1] + (self.y * delta))
 
     def draw(self):
@@ -317,8 +316,8 @@ class Renderer():
             else:
                 node_2_coords = self.visual_nodes[event[2]].get_coords()
                 middle_point = (
-                    node_coords[0] - node_2_coords[0],
-                    node_coords[1] - node_2_coords[1],
+                    (node_2_coords[0] + node_coords[0]) / 2,
+                    (node_2_coords[1] + node_coords[1]) / 2,
                 )
                 target_coords = (
                     middle_point[0] - drone_coords[0],
