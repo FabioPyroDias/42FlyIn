@@ -2,6 +2,7 @@ from typing import Optional
 from src.map.drone import Drone
 from src.map.map import Map
 from src.map.connection import Connection
+from src.map.zones import RestrictedZone
 
 
 class Manager():
@@ -19,7 +20,6 @@ class Manager():
             drone_index += 1
 
     # This method works and achieves all benchmarks for easy, medium and hard.
-    # Impossible Dream, for some reason, achieves 67 moves
     def run(self) -> None:
         turns = 0
         self.graph.paths = self.graph.paths[0:self.graph.drone_count]
@@ -49,9 +49,15 @@ class Manager():
                         continue
                     next_node = self.graph.nodes[next_node_name]
                     if next_node.current_drones == next_node.max_drones:
-                        connection = None
-                        next_node = None
-                        continue
+                        if isinstance(next_node.zone, RestrictedZone):
+                            if next_node.to_arrive >= 2:
+                                connection = None
+                                next_node = None
+                                continue
+                        else:
+                            connection = None
+                            next_node = None
+                            continue
 
                     path_worth = False
                     if path_index - 1 > 0:

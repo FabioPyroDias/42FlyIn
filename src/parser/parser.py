@@ -434,3 +434,5 @@ class Parser():
             sys.exit(f"ERROR: {self.map_name} is a directory, not a file")
         except ValueError as error:
             sys.exit(f"ERROR Line {self.line}: {error}")
+        except PermissionError:
+            sys.exit(f"ERROR: {self.map_name} permission denied")

@@ -22,6 +22,8 @@ class Node():
         self.max_drones = configs.get("max_drones", 1)
         self.current_drones = 0
 
+        self.to_arrive = 0
+
         self.start = start_hub
         self.end = end_hub
 
