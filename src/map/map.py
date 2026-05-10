@@ -9,6 +9,14 @@ from src.map.zones import BlockedZone, PriorityZone
 class Map():
     def __init__(self, map_config: MapConfig) -> None:
         """
+        Map will hold all the Nodes, Connections and valid paths between
+            "start_hub" and "end_hub"
+
+        Args:
+            map_config (MapConfig): Holds all the relevant information to the map
+
+        Returns:
+            None
         """
 
         # Take the dictionary out of MapConfigs
@@ -170,9 +178,27 @@ class Map():
         # self.paths = sorted(self.paths, key=lambda x: x[1])
         self.paths = sorted(self.paths,
                             key=lambda x: (x[1], self.sort_by_priority(x)))
+
+        # Limit paths to the path with the least cost.
+        # This comes after analising the results with
+        #   several paths taken into account in the solving algorithm.
+        # Just one path is much more efficient.
         self.paths = self.paths[0:1]
 
     def sort_by_priority(self, path: tuple[list[str], int]) -> int:
+        """
+        Counts the number of PriorityZone in the respective path.
+        Returns it as a negative number of itself to aid
+            the sorting of the paths
+
+        Args:
+            path (tuple[list[str], int]): path containing all the nodes and
+                the respective cost
+
+        Returns:
+            int: negative number of PriorityZones in the path
+        """
+
         counter = 0
         for node in path[0]:
             if isinstance(self.nodes[node].zone, PriorityZone):

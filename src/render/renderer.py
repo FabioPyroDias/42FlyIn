@@ -1,6 +1,5 @@
 import sys
 import pygame
-import time
 from typing import Any
 from src.manager import Manager
 from src.map.node import Node
@@ -38,22 +37,45 @@ class VisualNode():
     def __init__(self, coords: tuple[Any, Any],
                  color: str, scale: float, surface: pygame.Surface,
                  zone: Zone) -> None:
+        """
+        Visual representation of the Node.
+        Responsible for initializing
+
+        Args:
+            coords (tuple[int, int]): node coordinates in the graphic space
+            color (str): node color
+            scale (float): the visual scale of the node
+            surface (pygame.Surface): Where the node will be drawn
+            zone (Zone): Normal, Priority, Reserved or Blocked Zone
+
+        Returns:
+            None
+        """
+
         self.coords = coords
         self.color_name = color
         self.color = COLORS[self.color_name]
         self.scale = scale
-        factor = 4
         self.surface = surface
 
+        # Aids the scale of the node
+        factor = 4
+
         if self.color_name != "rainbow":
+            # Load the images, separated by layers.
+            # This gives a much better look to the nodes
             self.border_surface = pygame.image.load("assets/Border.png").convert_alpha()
             self.base_surface = pygame.image.load("assets/Base.png").convert_alpha()
             self.highlight_surface = pygame.image.load("assets/Highlight.png").convert_alpha()
             self.shadow_surface = pygame.image.load("assets/Shadow.png").convert_alpha()
 
+            # Image dimensions based on the scale and factor
             image_width = self.border_surface.get_width() * ((self.scale / 100) / factor)
             image_height = self.border_surface.get_height() * ((self.scale / 100) / factor)
 
+            # Some images will change their color based on the color parameter.
+            #   fill() method is used to tint the node with the passed color.
+            # These will use the special flag "BLEND_MULT"
             self.border_surface = pygame.transform.scale(self.border_surface, (int(image_width), int(image_height)))
             self.base_surface = pygame.transform.scale(self.base_surface, (int(image_width), int(image_height)))
             self.base_surface.fill(self.color, special_flags=pygame.BLEND_MULT)
@@ -61,6 +83,8 @@ class VisualNode():
             self.highlight_surface.fill(self.color, special_flags=pygame.BLEND_MULT)
             self.shadow_surface = pygame.transform.scale(self.shadow_surface, (int(image_width), int(image_height)))
         else:
+            # In case there's a "rainbow" color, a specific image is loaded
+            #   with a rainbow pattern.
             self.rainbow_surface = pygame.image.load("assets/RainbowNode.png").convert_alpha()
 
             image_width = self.rainbow_surface.get_width() * ((self.scale / 100) / factor)
@@ -68,7 +92,8 @@ class VisualNode():
 
             self.rainbow_surface = pygame.transform.scale(self.rainbow_surface, (int(image_width), int(image_height)))
 
-
+        # The nodes have Zones and, if they're not "Normal", which is the
+        #   standard zone type, an image is loaded to identify the nodes.
         self.zone_surface = None
 
         if not isinstance(zone, NormalZone):
@@ -77,6 +102,7 @@ class VisualNode():
             zone_height = self.zone_surface.get_height() * ((self.scale / 100) / factor)
             self.zone_surface = pygame.transform.scale(self.zone_surface, (int(zone_width), int(zone_height)))
 
+        # They're color-coded as well to make it easier to identify their type.
         if isinstance(zone, PriorityZone):
             self.zone_surface.fill(COLORS["green"], special_flags=pygame.BLEND_MULT)
         elif isinstance(zone, RestrictedZone):
@@ -85,9 +111,29 @@ class VisualNode():
             self.zone_surface.fill(COLORS["red"], special_flags=pygame.BLEND_MULT)
 
     def get_coords(self) -> tuple[float, float]:
+        """
+        Returns VisualNode graphical space coordinates
+
+        Args:
+            None
+
+        Returns:
+            tuple[float, float]: Visual node coords
+        """
+
         return self.coords
 
     def draw(self) -> None:
+        """
+        Displays the visual representation of the VisualNode
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         if self.color_name != "rainbow":
             self.surface.blit(self.border_surface, self.border_surface.get_rect(center = self.coords))
             self.surface.blit(self.base_surface, self.base_surface.get_rect(center = self.coords))
@@ -103,14 +149,35 @@ class VisualNode():
 class VisualConnection():
     def __init__(self, node_1: VisualNode, node_2: VisualNode,
                  surface: pygame.Surface) -> None:
+        """
+        Visual representation of the Connection.
+        Responsible for initializing
+
+        Args:
+            node1 (VisualNode): Used for their graphical space coordinates
+            node2 (VisualNode): Used for their graphical space coordinates
+            surface (pygame.Surface): Where the node will be drawn
+
+        Returns:
+            None
+        """
+
         self.coords_1 = node_1.get_coords()
         self.coords_2 = node_2.get_coords()
         self.surface = surface
         self.color = pygame.Color(21, 234, 229)
-        #import random
-        #self.color = pygame.Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
     def draw(self):
+        """
+        Displays the visual representation of the VisualConnection
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
         pygame.draw.line(self.surface, self.color,
                          self.coords_1, self.coords_2, 6)
 

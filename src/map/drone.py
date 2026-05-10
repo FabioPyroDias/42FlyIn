@@ -7,6 +7,19 @@ import math
 
 class Drone():
     def __init__(self, drone_id: str, current_node: Node) -> None:
+        """
+        Drone travels through Nodes via Connections.
+
+        Args:
+            drone_id (str): Drone identifier
+            current_node (Node): where the Drone exists currently.
+                By default, it starts in the "start_hub"
+
+        Returns:
+            None
+        """
+
+        # Comentar isto TODO TODO TODO TODO
         self.drone_id = drone_id
         self.coords = current_node.coords
         self.in_node = True
@@ -66,15 +79,3 @@ class Drone():
                 return (f"{self.drone_id}-{self.current_node.name}"
                         f"-{self.target_node.name}")
         return ""
-
-    def __str__(self) -> str:
-        text = (f"Drone {self.drone_id} | "
-                f"Current Node: {self.current_node.name} | "
-                f"Target Node: ")
-        if not self.target_node:
-            text += "None | "
-        else:
-            text += f"{self.target_node.name} | "
-        text += f"Turns to move: {self.turns_to_move}"
-
-        return text
