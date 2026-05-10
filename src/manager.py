@@ -11,6 +11,7 @@ class Manager():
         self.active_drones = []
         self.finished_drones: list[Drone] = []
         self.turns = []
+        self.complete_simulation = 0
 
         drone_index = 0
         while drone_index < self.graph.drone_count:
@@ -101,4 +102,4 @@ class Manager():
                     drone.coords = 0
                 drone_index -= 1
             turns += 1
-        print(turns)
+        self.complete_simulation = turns

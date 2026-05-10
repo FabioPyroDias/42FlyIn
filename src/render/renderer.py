@@ -56,9 +56,9 @@ class VisualNode():
 
             self.border_surface = pygame.transform.scale(self.border_surface, (int(image_width), int(image_height)))
             self.base_surface = pygame.transform.scale(self.base_surface, (int(image_width), int(image_height)))
-            self.base_surface.fill(self.color, special_flags=pygame.BLEND_ADD)
+            self.base_surface.fill(self.color, special_flags=pygame.BLEND_MULT)
             self.highlight_surface = pygame.transform.scale(self.highlight_surface, (int(image_width), int(image_height)))
-            self.highlight_surface.fill(self.color, special_flags=pygame.BLEND_ADD)
+            self.highlight_surface.fill(self.color, special_flags=pygame.BLEND_MULT)
             self.shadow_surface = pygame.transform.scale(self.shadow_surface, (int(image_width), int(image_height)))
         else:
             self.rainbow_surface = pygame.image.load("assets/RainbowNode.png").convert_alpha()
@@ -88,8 +88,6 @@ class VisualNode():
         return self.coords
 
     def draw(self) -> None:
-        """ pygame.draw.circle(self.surface, self.color, 
-                           self.coords, self.scale / 4) """
         if self.color_name != "rainbow":
             self.surface.blit(self.border_surface, self.border_surface.get_rect(center = self.coords))
             self.surface.blit(self.base_surface, self.base_surface.get_rect(center = self.coords))
@@ -156,8 +154,8 @@ class VisualDrone():
         self.surface.blit(self.drone_surface, self.drone_surface.get_rect(center = self.coords))
 
         font = pygame.font.SysFont(None, self.font_size)
-        text_surf = font.render(self.id, True, (0, 0, 0))
-        self.surface.blit(text_surf, text_surf.get_rect(center = (self.coords)))
+        text_surface = font.render(self.id, True, (0, 0, 0))
+        self.surface.blit(text_surface, text_surface.get_rect(center = (self.coords)))
 
     def reset_can_move(self) -> None:
         self.can_move = False
@@ -183,19 +181,21 @@ class Renderer():
 
         self.fps = 60
 
+        self.zone_legend = pygame.image.load("assets/Zone.png").convert_alpha()
+
     def set_window_size(self) -> None:
         self.scale = 100
 
-        min_width = 800
-        max_width = 1600
-        min_height = 800
-        max_height = 1000
+        self.min_width = 800
+        self.max_width = 1600
+        self.min_height = 800
+        selfmax_height = 1000
 
-        self.width = min_width
-        self.height = min_height
+        self.width = self.min_width
+        self.height = self.min_height
 
-        self.draw_width_margin = 200
-        self.draw_height_margin = 200
+        self.draw_width_margin = 400
+        self.draw_height_margin = 400
         self.draw_width = self.width - self.draw_width_margin
         self.draw_height = self.height - self.draw_height_margin
 
@@ -214,25 +214,25 @@ class Renderer():
         dimensions_y = (abs(self.coords_y[0]) +
                         abs(self.coords_y[1])) * self.scale
 
-        if dimensions_x > min_width:
+        if dimensions_x > self.min_width:
             self.width = dimensions_x
             self.draw_width = self.width - self.draw_width_margin
-        if dimensions_y > min_height:
+        if dimensions_y > self.min_height:
             self.height = dimensions_y
             self.draw_height = self.height - self.draw_height_margin
 
         scale_x = self.scale
         scale_y = self.scale
 
-        if self.width > max_width:
-            self.width = max_width
-            self.draw_width = max_width - self.draw_width_margin
-            scale_x = (max_width /
+        if self.width > self.max_width:
+            self.width = self.max_width
+            self.draw_width = self.max_width - self.draw_width_margin
+            scale_x = (self.max_width /
                        (abs(self.coords_x[0]) + abs(self.coords_x[1])))
-        if self.height > max_height:
-            self.height = max_height
-            self.draw_height = max_height - self.draw_height_margin
-            scale_y = (max_height /
+        if self.height > selfmax_height:
+            self.height = selfmax_height
+            self.draw_height = selfmax_height - self.draw_height_margin
+            scale_y = (selfmax_height /
                        (abs(self.coords_y[0]) + abs(self.coords_y[1])))
 
         if abs(self.coords_x[0]) + abs(self.coords_x[1]) != 0:
@@ -303,6 +303,67 @@ class Renderer():
         for drone in self.visual_drones.values():
             drone.draw()
 
+    def draw_turn(self, current_turn: int) -> None:
+        font_size = 42
+        text = f"{current_turn}/{self.manager.complete_simulation}"
+
+        pygame.draw.rect(self.surface, pygame.Color(13, 19, 95), pygame.Rect(20, 20, 100, 60), border_radius=25)
+
+        font = pygame.font.SysFont(None, font_size)
+        text_surface = font.render(text, True, COLORS["white"])
+        self.surface.blit(text_surface, text_surface.get_rect(center = (70, 50)))
+
+    def draw_legend(self) -> None:
+        font_size = 26
+        factor = 8
+        legend_margin = 20
+        scale = 50
+        background_width = self.min_width / 2
+
+        text_priority = "Priority"
+        text_restricted = "Restricted"
+        text_blocked = "Blocked"
+
+        font = pygame.font.SysFont(None, font_size)
+
+        width = self.zone_legend.get_width() * (scale / 100) / factor
+        height = self.zone_legend.get_height() * (scale / 100) / factor
+
+        zone_priority = pygame.transform.scale(self.zone_legend, (int(width), int(height)))
+        zone_priority.fill(COLORS["green"], special_flags=pygame.BLEND_MULT)
+        font_priority = font.render(text_priority, True, COLORS["white"])
+
+        zone_restricted = pygame.transform.scale(self.zone_legend, (int(width), int(height)))
+        zone_restricted.fill(COLORS["yellow"], special_flags=pygame.BLEND_MULT)
+        font_restricted = font.render(text_restricted, True, COLORS["white"])
+
+        zone_blocked = pygame.transform.scale(self.zone_legend, (int(width), int(height)))
+        zone_blocked.fill(COLORS["red"], special_flags=pygame.BLEND_MULT)
+        font_blocked = font.render(text_blocked, True, COLORS["white"])
+
+        background_rect = pygame.Rect(20, self.height - (self.draw_height_margin / 4), background_width, self.draw_height_margin / 3)
+
+        text_priority_coords = (background_rect.x + legend_margin, background_rect.centery - font_priority.get_rect().height)
+        zone_priority_coords = (text_priority_coords[0] + font_priority.get_rect().width + legend_margin, background_rect.centery - zone_priority.get_rect().centery)
+
+        text_restricted_coords = (background_rect.width / 3 + legend_margin, background_rect.centery - font_restricted.get_rect().height)
+        zone_restricted_coords = (text_restricted_coords[0] + font_restricted.get_rect().width + legend_margin, background_rect.centery - zone_restricted.get_rect().centery)
+
+        text_blocked_coords = (2 * (background_rect.width / 3) + legend_margin, background_rect.centery - font_blocked.get_rect().height)
+        zone_blocked_coords = (text_blocked_coords[0] + font_blocked.get_rect().width + legend_margin, background_rect.centery - zone_blocked.get_rect().centery)
+
+
+        pygame.draw.rect(self.surface, pygame.Color(13, 19, 95), background_rect, border_radius=20)
+
+        self.surface.blit(font_priority, font_priority.get_rect(topleft = text_priority_coords))
+        self.surface.blit(zone_priority, zone_priority.get_rect(center = zone_priority_coords))
+
+        self.surface.blit(font_restricted, font_restricted.get_rect(topleft = text_restricted_coords))
+        self.surface.blit(zone_restricted, zone_restricted.get_rect(center = zone_restricted_coords))
+
+        self.surface.blit(font_blocked, font_blocked.get_rect(topleft = text_blocked_coords))
+        self.surface.blit(zone_blocked, zone_blocked.get_rect(center = zone_blocked_coords))
+
     def set_turn_event(self, events: list[Any]):
         for event in events:
             target_coords = ()
@@ -327,10 +388,11 @@ class Renderer():
 
     def run(self) -> None:
         clock = pygame.time.Clock()
-
+        current_turn = 0
         for turn in self.manager.turns:
             self.set_turn_event(turn)
 
+            current_turn += 1
             current_time = 0
 
             while current_time < self.turn_duration:
@@ -338,6 +400,10 @@ class Renderer():
                 self.draw_connections()
                 self.draw_nodes()
                 self.draw_drones()
+
+                self.draw_turn(current_turn)
+                self.draw_legend()
+
                 pygame.display.flip()
                 self.check_pygame_event()
 
