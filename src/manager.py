@@ -64,12 +64,6 @@ class Manager():
         # The best optimal path for the map
         current_path = self.graph.path
 
-        # This algorithm was developed to take into account more than one path.
-        # After analising the results, multiple paths had worse efficiency.
-        # So, the "self.paths" is now only one path.
-        # The while loop in line 113 is just a one loop iteration.
-        # Yes, I could have removed it and have the code cleaner, but I'm lazy.
-        # ----------
         # The algorithm is divided into simple steps with a set of rules:
         #   1. It will run while there are drones outside the "end_hub".
         #   2. The "current_drone" will take into account the
@@ -88,8 +82,7 @@ class Manager():
         #   5. If all this conditions are valid, the "target_node" will be
         #       assigned to the destination of the "current_drone" and all
         #       it's relevant parameters updated.
-        #   6. After cycling through all the nodes, makes them move and
-        #       follows another set of parameters update.
+        #   6. Calls the "move()" method for the current drone
         #   7. If the "drone.move()" message exists, a successful movement
         #       was made. This needs to be stored and, at the end of the turn,
         #       printed as well as stored in the "turn_history" which
@@ -150,7 +143,7 @@ class Manager():
                 # Now evaluates the capacity of the "target_node".
                 #   With the exception of being a "RestrictedZone" (Step 4)
                 next_node = self.graph.nodes[next_node_name]
-                if next_node.current_drones == next_node.max_drones:
+                if next_node.current_drones >= next_node.max_drones:
                     if isinstance(next_node.zone, RestrictedZone):
                         if next_node.to_arrive >= 2:
                             connection = None
