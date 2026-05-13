@@ -7,9 +7,29 @@ from src.map.map_config import MapConfig
 
 class Parser():
     def __init__(self, map_name: str) -> None:
+        """
+        Responsible for translating the map information from the text file
+            into manageable data
+
+        Args:
+            map_name (str): map to be parsed
+
+        Returns:
+            None
+        """
+
+        # Map to be loaded
         self.map_name = map_name
+
+        # This data structure will hold all the map information
+        #   that will be stored in the MapConfig class
         self.configs: dict[str, Any] = {}
+
+        # Keeps track of all the Node names and coordinates, aids the
+        #   checking of duplicates both by name and by coordinates
         self.nodes: dict[str, tuple[int, int]] = {}
+
+        # Keeps track of the line where a possible error exists
         self.line = 0
 
     def add_node(self, key: str, node: dict[str, Any]) -> None:
@@ -75,6 +95,7 @@ class Parser():
                                  f"Node {node['name']} has the same "
                                  f"coordinates as {existing_node}")
 
+        # If nodes key doesn't exist yet, create it and update it
         if not self.configs.get("nodes", None):
             self.configs["nodes"] = [node]
             self.nodes[node["name"]] = node["coordinates"]
@@ -98,15 +119,19 @@ class Parser():
             - Raises ValueError if duplicated node
         """
 
+        # Get connections key configuration
         connections = self.configs.get("connections", None)
 
+        # If it doesn't exist, create it and update it
         if not connections:
             self.configs["connections"] = [connection]
             return
 
+        # Tracks both node names of this connection
         node1 = connection["node1"]
         node2 = connection["node2"]
 
+        # Verifies if there alredy exists a connection with both nodes
         for existing_connection in connections:
             equality = 0
             if (existing_connection == node1 or
@@ -201,21 +226,29 @@ class Parser():
             if metadata_index == len(node_values) - 1:
                 metadata_value = metadata_value[0:-1]
 
+            # Checks if metadata_key exists in the valid metadata keys
             if metadata_key not in HUB_METADATA_KEYS:
                 raise ValueError(f"Metadata key {metadata_key} invalid")
 
+            # Verifies if metadata_value of the "zone" metadata_key is valid
             if metadata_key == "zone":
                 if metadata_value not in METADATA_ZONE_VALUES:
                     raise ValueError(f"Specified {metadata_key} invalid. "
                                      f"Accepted Values: "
                                      f"{METADATA_ZONE_VALUES}")
                 node[metadata_key] = metadata_value
+
+            # Verifies if metadata_value of the "color" metadata_key is valid
             elif metadata_key == "color":
                 if metadata_value not in METADATA_COLOR_VALUES:
                     raise ValueError(f"Specified {metadata_key} invalid. "
                                      f"Accepted Values: "
                                      f"{METADATA_COLOR_VALUES}")
                 node[metadata_key] = metadata_value
+
+            # Verifies if metadata_value of the "max_drones" metadata_key
+            #   is valid. This means being positive for common nodes and
+            #   not being less than "nb_drones" for "start_hub" and "end_hub"
             else:
                 value = int(metadata_value)
                 if value <= 0:
@@ -309,6 +342,8 @@ class Parser():
             metadata[0] = metadata[0][1:]
             metadata[1] = metadata[1][:-1]
 
+            # Checks if metadata_key for the
+            #   connection is valid: "max_link_capactity"
             if metadata[0] != "max_link_capacity":
                 raise ValueError(f"Metadata for connection "
                                  f"{connection_values[0]} invalid. "
@@ -316,6 +351,7 @@ class Parser():
 
             metadata_value = int(metadata[1])
 
+            # The value for "max_link_capacity" must be positive
             if metadata_value < 0:
                 raise ValueError(f"Metadata for connection "
                                  f"{connection_values[0]} invalid. "
@@ -361,12 +397,15 @@ class Parser():
             # Typecasts number of drones to integer
             number_of_drones = int(elements[1].strip())
 
+            # Validates number of drones value
             if number_of_drones <= 0:
                 raise ValueError("\"nb_drones\" must be positive")
 
             self.configs["nb_drones"] = number_of_drones
             return
 
+        # Splits keys found between "hubs" and "connections"
+        # This allows for a much more organized code
         if key == "start_hub" or key == "end_hub" or key == "hub":
             if not self.configs.get("nb_drones", None):
                 raise ValueError("First key must be \"nb_drone\"")

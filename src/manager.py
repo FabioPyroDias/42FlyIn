@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from src.map.drone import Drone
 from src.map.map import Map
 from src.map.connection import Connection
@@ -19,7 +19,7 @@ class Manager():
 
         # Graph holds all the information of the map
         self.graph = graph
-        
+
         # "active_drones" possesses all the drones actively running
         #   in the simulation
         # When they arrive at "end_hub", they will be removed.
@@ -32,7 +32,7 @@ class Manager():
         #   2. The drone is in the middle of the connection:
         #   [drone_id, current_node, target_node]
         # Every turn, a new list will be added to "self.turns"
-        self.turns = []
+        self.turns: list[list[Any]] = []
 
         # The number of turns it took to complete the simulation
         self.complete_simulation = 0
@@ -127,10 +127,10 @@ class Manager():
                     next_node_name = current_path[current_node_index + 1]
                     connection: Optional[Connection] = self.graph.connections[
                         f"{current_node_name}-{next_node_name}"]
-                    
+
                     # Check the Connection capacity. (Step 3)
-                    if (connection.current_drones ==
-                       connection.max_link_capacity):
+                    if connection and (connection.current_drones ==
+                                       connection.max_link_capacity):
                         connection = None
                         continue
 
@@ -150,7 +150,8 @@ class Manager():
 
                     # If every check is valid, the drone now has a
                     #   "target_node" assigned.
-                    drone.set_target(next_node, connection)
+                    if connection:
+                        drone.set_target(next_node, connection)
                     found_path = True
                 drone_index += 1
 
@@ -171,9 +172,14 @@ class Manager():
                     #   if the drone reached the "target_node" in the
                     #   same turn or is still moving to it.
                     if drone.is_moving:
-                        turn_history.append([drone.drone_id, drone.current_node.name, drone.target_node.name])
+                        if drone.current_node and drone.target_node:
+                            turn_history.append(
+                                [drone.drone_id,
+                                 drone.current_node.name,
+                                 drone.target_node.name])
                     else:
-                        turn_history.append([drone.drone_id, drone.current_node.name])
+                        turn_history.append(
+                            [drone.drone_id, drone.current_node.name])
 
             # Finished turn and stored all of the events.
             self.turns.append(turn_history)
@@ -181,7 +187,8 @@ class Manager():
             # Display the turn events output
             print(output_message)
 
-            # Check and remove drones that already arrived at "end_hub" (Step 8)
+            # Check and remove drones that already
+            #   arrived at "end_hub" (Step 8)
             drone_index = len(self.active_drones) - 1
             while drone_index >= 0:
                 drone = self.active_drones[drone_index]

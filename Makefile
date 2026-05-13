@@ -15,9 +15,10 @@ install:
 	$(PIP_INSTALL) pygame
 
 run:
+	$(PYTHON) main.py $(MAP)
 
 debug:
-	$(PYTHON) -m pdb ######################################TODO
+	$(PYTHON) -m pdb main.py $(MAP)
 
 clean:
 	$(RM) src/__pycache__

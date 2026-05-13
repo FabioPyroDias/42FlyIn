@@ -13,7 +13,8 @@ class Map():
             "start_hub" and "end_hub"
 
         Args:
-            map_config (MapConfig): Holds all the relevant information to the map
+            map_config (MapConfig): Holds all the
+                relevant information to the map
 
         Returns:
             None
