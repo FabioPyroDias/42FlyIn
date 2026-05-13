@@ -59,9 +59,9 @@ class Drone():
         if self.is_moving:
             return
 
-        # Sets target and adds a drone to the Node
+        # Sets target and adds a predicted drone to the Node
         self.target_node = target_node
-        self.target_node.add_drone()
+        self.target_node.add_predicted_drone()
 
         # Sets connection and adds a drone to the Connection
         self.connection = connection
@@ -131,6 +131,11 @@ class Drone():
             # As previously stated, the drone coordinates are now the exact
             #   same as the updated "current_node"
             self.coords = self.current_node.coords
+
+            # The drone is now in the node and the number of predicted drones
+            #   is updated
+            self.current_node.add_drone()
+            self.current_node.remove_predicted_drone()
 
             # Output message follows the "drone_id - current_node" format
             return f"{self.drone_id}-{self.current_node.name}"

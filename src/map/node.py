@@ -46,8 +46,40 @@ class Node():
         #   way more efficient.
         self.to_arrive = 0
 
+        # self.current_drones could be used as both a real drone count as
+        #   well as a prediction. With this property, the purpose of
+        #   self.current_drones is now only to keep track of the
+        #   real drone count.
+        self.predicted_drones = 0
+
         self.start = start_hub
         self.end = end_hub
+
+    def add_predicted_drone(self) -> None:
+        """
+        Increases the current number of predicted drones
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        self.predicted_drones += 1
+
+    def remove_predicted_drone(self) -> None:
+        """
+        Decreases the current number of predicted drones
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        self.predicted_drones -= 1
 
     def add_drone(self) -> None:
         """

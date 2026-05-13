@@ -143,7 +143,8 @@ class Manager():
                 # Now evaluates the capacity of the "target_node".
                 #   With the exception of being a "RestrictedZone" (Step 4)
                 next_node = self.graph.nodes[next_node_name]
-                if next_node.current_drones >= next_node.max_drones:
+                if (next_node.current_drones + next_node.predicted_drones >=
+                   next_node.max_drones):
                     if isinstance(next_node.zone, RestrictedZone):
                         if next_node.to_arrive >= 2:
                             connection = None
