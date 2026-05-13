@@ -61,6 +61,9 @@ class Manager():
         #   value when the simulation is over
         turns = 0
 
+        # The best optimal path for the map
+        current_path = self.graph.path
+
         # This algorithm was developed to take into account more than one path.
         # After analising the results, multiple paths had worse efficiency.
         # So, the "self.paths" is now only one path.
@@ -101,58 +104,67 @@ class Manager():
             turn_history = []
             output_message = ""
             for drone in self.active_drones:
-                found_path = False
-                path_index = 0
-                # continue keyword simply skips this iteration.
-                # Since this while is just a single iteration loop,
-                #   "continue" is avoiding skipping the for loop.
-                # In reality, all this "while loop" should be an "if"
-                #   but due to the initial intention with the algorithm,
-                #   this while loops holds it steady.
-                # "Perfectly balanced as all things should be" - Thanos
-                while not found_path and path_index < len(self.graph.paths):
 
-                    # This verifies if the current node is in the
-                    #   considered path.
-                    # Since this was limited to one single path, this
-                    #   will always be true.
-                    current_node = drone.current_node
-                    current_path = self.graph.paths[path_index][0]
-                    current_node_name = current_node.name
-                    path_index += 1
-
-                    # Gets the "next_node" in the path and, alongside the
-                    #   "current_node", gets the Connection between both.
-                    current_node_index = current_path.index(current_node_name)
-                    next_node_name = current_path[current_node_index + 1]
-                    connection: Optional[Connection] = self.graph.connections[
-                        f"{current_node_name}-{next_node_name}"]
-
-                    # Check the Connection capacity. (Step 3)
-                    if connection and (connection.current_drones ==
-                                       connection.max_link_capacity):
-                        connection = None
-                        continue
-
-                    # Now evaluates the capacity of the "target_node".
-                    #   With the exception of being a "RestrictedZone" (Step 4)
-                    next_node = self.graph.nodes[next_node_name]
-                    if next_node.current_drones == next_node.max_drones:
-                        if isinstance(next_node.zone, RestrictedZone):
-                            if next_node.to_arrive >= 2:
-                                connection = None
-                                next_node = None
-                                continue
+                # In case the drone is already moving, there's no need to
+                #   check for a Connection or set a new "target_node".
+                # Simply call the "move()" method, store the output message
+                #   as well as the event in the turn history.
+                # After that, skip the current turn for this specific drone
+                if drone.is_moving:
+                    drone_message = drone.move()
+                    if len(drone_message) != 0:
+                        if len(output_message) == 0:
+                            output_message = drone_message
                         else:
+                            output_message += f" {drone_message}"
+
+                        if drone.current_node and drone.target_node:
+                            turn_history.append(
+                                [drone.drone_id,
+                                 drone.current_node.name,
+                                 drone.target_node.name])
+                        else:
+                            turn_history.append(
+                                [drone.drone_id, drone.current_node.name])
+
+                    # continue keyword simply skips this iteration.
+                    continue
+
+                # Get the current node where the drone is at the current turn
+                current_node = drone.current_node
+                current_node_name = current_node.name
+
+                # Get the "next_node" in the path and, alongside the
+                #   "current_node", gets the Connection between both.
+                current_node_index = current_path.index(current_node_name)
+                next_node_name = current_path[current_node_index + 1]
+                connection: Optional[Connection] = self.graph.connections[
+                    f"{current_node_name}-{next_node_name}"]
+
+                # Check the Connection capacity. (Step 3)
+                if connection and (connection.current_drones ==
+                                   connection.max_link_capacity):
+                    connection = None
+                    continue
+
+                # Now evaluates the capacity of the "target_node".
+                #   With the exception of being a "RestrictedZone" (Step 4)
+                next_node = self.graph.nodes[next_node_name]
+                if next_node.current_drones == next_node.max_drones:
+                    if isinstance(next_node.zone, RestrictedZone):
+                        if next_node.to_arrive >= 2:
                             connection = None
                             next_node = None
                             continue
+                    else:
+                        connection = None
+                        next_node = None
+                        continue
 
-                    # If every check is valid, the drone now has a
-                    #   "target_node" assigned.
-                    if connection:
-                        drone.set_target(next_node, connection)
-                    found_path = True
+                # If every check is valid, the drone now has a
+                #   "target_node" assigned.
+                if connection:
+                    drone.set_target(next_node, connection)
                 drone_index += 1
 
                 # After the drones evaluation is done and successfull

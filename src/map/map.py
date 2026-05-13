@@ -185,6 +185,7 @@ class Map():
         #   several paths taken into account in the solving algorithm.
         # Just one path is much more efficient.
         self.paths = self.paths[0:1]
+        self.path = self.paths[0][0]
 
     def sort_by_priority(self, path: tuple[list[str], int]) -> int:
         """

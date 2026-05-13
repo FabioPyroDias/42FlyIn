@@ -15,7 +15,7 @@ install:
 	$(PIP_INSTALL) pygame
 
 run:
-	$(PYTHON) main.py $(MAP)
+	@$(PYTHON) main.py $(MAP)
 
 debug:
 	$(PYTHON) -m pdb main.py $(MAP)
